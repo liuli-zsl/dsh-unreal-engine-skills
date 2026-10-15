@@ -1,0 +1,25 @@
+# dsh-unreal-engine-skills bundle layer.
+# 1) Host plugin row: registers the skills + Unreal project context.
+# 2) MCP client row: connects the unreal-mcp server (Unreal Editor's
+#    ModelContextProtocol plugin, default http://127.0.0.1:8000/mcp).
+#    The client reconnects with exponential backoff while the editor is down.
+- insert:
+    - id: unreal-engine-skills
+      name: 'dsh-unreal-engine-skills'
+    - id: unreal-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: unreal-mcp
+        transport: streamable-http
+        url: http://127.0.0.1:8000/mcp
+        # The editor is usually not running when DSH starts: retry quietly
+        # instead of failing the profile, and keep the connection alive.
+        failOnStartupError: false
+        # Live Coding / big editor operations can exceed the default 60s.
+        toolCallTimeoutMs: 300000
+        reconnect:
+          enabled: true
+          initialDelayMs: 1000
+          maxDelayMs: 30000
+          # ~1 hour of retries (at the 30s cap) while the editor boots.
+          maxAttempts: 120

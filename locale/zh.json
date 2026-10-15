@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Unreal Engine 技能",
+    "description": "通过 MCP 直接操控 Unreal 编辑器：注册 unreal-mcp / create-toolset / unreal-skill 技能，接通 unreal-mcp MCP 连接，并在 UE 工程工作区自动注入项目上下文。"
+  }
+}
