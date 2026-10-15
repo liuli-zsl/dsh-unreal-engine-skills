@@ -11,7 +11,11 @@
       config:
         serverName: unreal-mcp
         transport: streamable-http
-        url: http://127.0.0.1:8000/mcp
+        # Override with UNREAL_MCP_URL when the editor's MCP server is not on
+        # the default 8000 port, e.g. UNREAL_MCP_URL=http://127.0.0.1:9999/mcp.
+        # (A profile-patch entry with the same id replaces this row's config,
+        # so any patch override must repeat serverName/transport/url together.)
+        url: !!js process.env.UNREAL_MCP_URL ?? 'http://127.0.0.1:8000/mcp'
         # The editor is usually not running when DSH starts: retry quietly
         # instead of failing the profile, and keep the connection alive.
         failOnStartupError: false

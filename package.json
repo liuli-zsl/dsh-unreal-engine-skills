@@ -1,12 +1,13 @@
 {
   "name": "dsh-unreal-engine-skills",
-  "version": "1.0.0",
-  "description": "DeepSeek Harness port of Epic Games' Unreal Engine Skills plugin: registers the unreal-mcp / create-toolset / unreal-skill skills, wires the unreal-mcp MCP connection, and injects Unreal project context into UE workspaces.",
+  "version": "1.0.2",
+  "description": "DeepSeek Harness port of Epic Games' Unreal Engine Skills plugin: registers the unreal-mcp / create-toolset / unreal-skill skills, wires the unreal-mcp MCP connection (port configurable on the Plugins page), and injects Unreal project context into UE workspaces.",
   "private": true,
   "type": "module",
   "main": "./lib/index.js",
   "exports": {
     ".": "./lib/index.js",
+    "./client": "./lib/client.js",
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json"
   },
@@ -19,9 +20,24 @@
   ],
   "icon": "./icon.svg",
   "license": "MIT",
+  "dependencies": {
+    "@deepseek-ai/schemastery": "~3.18.4"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.4"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-plugin-manager",
+        "@deepseek-ai/dsh-api-remotes"
+      ],
+      "platform": "web"
     }
   }
 }

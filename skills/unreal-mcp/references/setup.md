@@ -58,7 +58,7 @@ A command-line alternative also works: pass `-ModelContextProtocolStartServer` (
 
 The `dsh-unreal-engine-skills` plugin bundles a `@deepseek-ai/dsh-mcp-client` row named `unreal-mcp` pointing at the editor's default endpoint, `http://127.0.0.1:8000/mcp`. No `.mcp.json` or client-config generation is needed: the editor's `ModelContextProtocol.GenerateClientConfig` console command writes configs for other clients (ClaudeCode, Cursor, VSCode, …), which DeepSeek Harness does not read.
 
-If you changed the port or path in step 2, edit the installed bundle's `unreal-mcp` row config in the Harness plugin inventory (Settings → Plugins) so the `url` matches, then re-apply. The client reconnects with exponential backoff, so the editor does not need to be running when the Harness starts.
+If you changed the port or path in step 2, open 插件 → **Unreal Engine 技能** in DeepSeek Harness and set the port (and URL path) in the MCP connection form on the bundle page — saving hot-switches the connection, no restart. Alternatively set `UNREAL_MCP_URL=http://127.0.0.1:9999/mcp` before starting the Harness; the environment variable always wins. The client reconnects with exponential backoff, so the editor does not need to be running when the Harness starts.
 
 ## 4. Optional: install the proxy
 
