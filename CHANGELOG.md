@@ -2,6 +2,14 @@
 
 从 2026-10-15 文档建档起记录可核实的变更。更早版本的发布日期和改动历史未在本工作副本中核实，因此不补写历史条目。变更类型与验证范围均按实际执行内容记录，静态检查不能代替运行实测。
 
+## 1.0.3 — 2026-10-15
+
+`package.json`：`version: 1.0.3`。
+
+- README「从哪里开始」补充链接安装的前置条件：以本目录链接方式安装时，host 半依赖落地于本仓库 `node_modules`，克隆后或新增依赖后必须先 `pnpm install`（建议 `--frozen-lockfile`），否则 Node 按真实路径解析依赖时找不到 `@deepseek-ai/schemastery`，插件行静默未激活（fiber 未运行 / Config 检查器 `inactive`），技能注册、UE 上下文注入与插件页表单全部不生效。
+- 本条目的起因与运行实测：本机以链接安装 1.0.2 时复现上述静默失败（模块导入报 `ERR_MODULE_NOT_FOUND: Cannot find package '@deepseek-ai/schemastery'`）；在仓库执行 `pnpm install --frozen-lockfile` 落地依赖后，经插件管理器对 `unreal-engine-skills` 行停用→启用触发热重载，行恢复 active、volatile `Config`（`port`/`path`）在线可见、`plugins.bundle.config` 与 `plugins.row.config` 两个槽位重新注册 active，全程无需重启 Harness。
+- 未验证：表单视觉呈现与界面点击保存链路；编辑器端 MCP 工具真实调用（编辑器服务器未运行）。
+
 ## 1.0.2 — 2026-10-15
 
 `package.json`：`version: 1.0.2`。

@@ -2,11 +2,11 @@
 
 dsh-unreal-engine-skills 是 Epic Games [Unreal Engine Skills for Claude Code](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin) 插件（MIT，上游 3.1.1）的 DeepSeek Harness 移植版。它以单个 bundle 提供三件事：注册 `unreal-mcp` / `create-toolset` / `unreal-skill` 三个运行时技能；接通指向 Unreal 编辑器 `ModelContextProtocol` 服务器的 `unreal-mcp` MCP 连接（端口可在插件页直接修改，保存即热切换）；以及在 UE 工程工作区注入 Unreal 工程上下文提示。
 
-本工作副本的 `package.json` 标记版本为 `1.0.2`。版本标记不代表所有部署形态（本机链接安装、npm 分发、无 settings/configEditor 服务的精简 profile）都已完成实机验证。
+本工作副本的 `package.json` 标记版本为 `1.0.3`。版本标记不代表所有部署形态（本机链接安装、npm 分发、无 settings/configEditor 服务的精简 profile）都已完成实机验证。
 
 ## 从哪里开始
 
-1. 安装并启用 bundle：在 Harness 的插件管理器中 `install_bundle` 指向本目录（或 npm 发布后的包名）。bundle 补丁会插入 `unreal-engine-skills`（host 行）与 `unreal-mcp`（`@deepseek-ai/dsh-mcp-client` 行）两行。
+1. 安装并启用 bundle：在 Harness 的插件管理器中 `install_bundle` 指向本目录（或 npm 发布后的包名）。bundle 补丁会插入 `unreal-engine-skills`（host 行）与 `unreal-mcp`（`@deepseek-ai/dsh-mcp-client` 行）两行。**以本目录链接方式安装时，先在本仓库执行一次 `pnpm install`（建议 `--frozen-lockfile`；克隆后或新增依赖后都要执行）**：host 半依赖（`@deepseek-ai/schemastery` 等）落地在本仓库 `node_modules`，缺失时插件行会静默保持未激活——技能注册、UE 上下文注入与插件页端口表单全部不生效，插件管理器中表现为该行 fiber 未运行（Config 检查器 status `inactive`）。
 2. 编辑器侧每个项目配置一次：在项目的 `.uproject` 中启用 `ModelContextProtocol` 与 `AllToolsets` 插件；然后在 `<Project>/Saved/Config/<Platform>Editor/EditorPerProjectUserSettings.ini` 中设置 `bAutoStartServer=True`，或在编辑器控制台执行 `ModelContextProtocol.StartServer [port]`。没有 `AllToolsets` 时服务器会启动但没有工具。
 3. 端口默认是编辑器侧的 `8000`。需要换端口时，打开 插件 → **Unreal Engine 技能**：bundle 页面上的「Unreal Engine MCP 连接」表单可以直接改端口和 URL 路径，保存后 `unreal-mcp` 连接立即用新地址重连，无需重启 Harness；`unreal-mcp` 行本身也有「配置」入口打开同一表单。也可以在启动 Harness 前设置 `UNREAL_MCP_URL` 环境变量，它会覆盖表单端口。
 4. 验证：编辑器运行后，让智能体调用 `mcp__unreal-mcp__list_toolsets`（或"列出当前关卡的所有 Actor"）；插件页中 `unreal-mcp` 行显示运行中，且编辑器输出日志有 MCP 服务器启动信息。

@@ -1,6 +1,6 @@
 {
   "name": "dsh-unreal-engine-skills",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "DeepSeek Harness port of Epic Games' Unreal Engine Skills plugin: registers the unreal-mcp / create-toolset / unreal-skill skills, wires the unreal-mcp MCP connection (port configurable on the Plugins page), and injects Unreal project context into UE workspaces.",
   "private": true,
   "type": "module",
