@@ -2,7 +2,7 @@
 
 dsh-unreal-engine-skills 是 Epic Games [Unreal Engine Skills for Claude Code](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin) 插件（MIT，上游 3.1.1）的 DeepSeek Harness 移植版。它以单个 bundle 提供三件事：注册 `unreal-mcp` / `create-toolset` / `unreal-skill` 三个运行时技能；接通指向 Unreal 编辑器 `ModelContextProtocol` 服务器的 `unreal-mcp` MCP 连接（端口可在插件页直接修改，保存即热切换）；以及在 UE 工程工作区注入 Unreal 工程上下文提示。
 
-本工作副本的 `package.json` 标记版本为 `1.0.3`。版本标记不代表所有部署形态（本机链接安装、npm 分发、无 settings/configEditor 服务的精简 profile）都已完成实机验证。
+本工作副本的 `package.json` 标记版本为 `1.0.4`。版本标记不代表所有部署形态（本机链接安装、npm 分发、无 settings/configEditor 服务的精简 profile）都已完成实机验证。
 
 ## 从哪里开始
 
@@ -42,7 +42,7 @@ dsh-unreal-engine-skills 是 Epic Games [Unreal Engine Skills for Claude Code](h
 
 ## 平台与验证边界
 
-本插件面向 DeepSeek Harness 0.2.0-rc.2 系桌面部署。已在运行中的 Harness 实例上实测并确认的项：
+本插件面向 DeepSeek Harness 0.2.1-rc.2 系桌面部署，`package.json` 的 `engines.dsh` 声明为 `>=0.2.0-rc.2 <0.3.0`（兼容 0.2.0-rc.2 起；从 0.2.1 起该字段是运行时唯一的兼容性判据，声明后 `@deepseek-ai/dsh-*` 的 peer 范围不再参与判定）。已在运行中的 Harness 实例上实测并确认的项：
 
 - host 半新代码经 HMR 热替换加载，volatile `Config` schema 在线可见（Config 检查器：`port` 1–65535、`path`，均带 volatile 标记）；
 - 端口同步端到端往返：改端口 → 行热重载 → 同步把 `unreal-mcp` 行的完整配置（含 url）写入 profile 补丁 → 行热重载重连（9998 → 9999 实测）；

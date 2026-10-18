@@ -2,6 +2,20 @@
 
 从 2026-10-15 文档建档起记录可核实的变更。更早版本的发布日期和改动历史未在本工作副本中核实，因此不补写历史条目。变更类型与验证范围均按实际执行内容记录，静态检查不能代替运行实测。
 
+## 1.0.4 — 2026-10-18
+
+`package.json`：`version: 1.0.4`；新增 `engines.dsh: ">=0.2.0-rc.2 <0.3.0"`。
+
+- 适配 DeepSeek Harness 0.2.1-rc.2 的兼容性判据：0.2.1 把 `evaluatePluginCompatibility` 改为 `unmetRequirements()` —— 清单自带 `engines.dsh` 时由它单独决定，`@deepseek-ai/dsh-*` 的 peer 范围不再参与判定；未声明时才回退到 peer 检查。本插件原先没有任何 `@deepseek-ai/dsh-*` peer，因此在任何 DSH 版本上都属于「无声明、不检查」。补上 `engines.dsh` 后，插件管理器与桌面端的兼容性判断对本插件有了明确依据，同时不改变运行行为。
+- 运行时代码、`cordis.patch.yml`、浏览器半 bundle 均未修改：逐一核对 0.2.0-rc.2 → 0.2.1-rc.2 的接口后确认无破坏性变更。`dsh-skill`、`dsh-settings`、`dsh-config-editor` 的 `lib/index.js` 与 0.2.0-rc.2 逐字节相同；`dsh-system-prompt` 只做增量（新增 `interpolate`、`refreshContext` 等），`context({ name, order, text })` 的注册形状不变；`dsh-hmr` 内部实现从 672 行增长到 1465 行，但 `executing` 仍是 `AsyncLocalStorage`，`hmr.executing.exit()` 语义不变；`dsh-mcp-client` 的 `serverName` / `transport` / `url` / `failOnStartupError` / `toolCallTimeoutMs` / `reconnect.*` 配置键不变，`cordis.patch.yml` 无需改动。
+- 浏览器半同样无需改动：`@deepseek-ai/dsh-client-ui-primitives`、`-client-ui-slots`、`-client-store` 在 0.2.1 不再作为独立包发布，改由 Web 前端 bundle 的共享模块表以同一模块 id 提供（`dsh-web-frontend` 的 `SZ()` 模块映射），`require()` 名称不变；`plugins.bundle.config` / `plugins.row.config` 槽位、`${bundle}#${rowId}` 的 key 约定、`configForms.whileServed` 用法，以及 `SettingsFormModel` / `settingsNumberField` / `settingsTextField` / `SettingsValueField` / `SettingsForm` 导出在 0.2.1 前端 bundle 中均保留。
+- 文档：`README.md` 的「平台与验证边界」改为面向 0.2.1-rc.2，并说明 `engines.dsh` 的新判定规则；当前版本号同步为 1.0.4。
+- 验证（静态 + 在线只读探针）：
+  - `package.json` JSON 解析通过；`node --check lib/index.js lib/client.js` 通过；以 `Config["~standard"].validate({ port: 8000, path: '/mcp' })` 校验 schema 通过（port / path 解析为 volatile 包装，与既有行为一致）。
+  - 用运行中 Harness 的 `@deepseek-ai/dsh-app-boot@0.2.1-rc.2` 直接调用 `evaluatePluginCompatibility(<本插件 package.json>)`：`runtime dsh: 0.2.1-rc.2`，`compat issue: none`，新门禁放行。
+  - 在线：`Config` 检查器中 `include:unreal-engine-skills` 仍为 `status: schema`（volatile `port` / `path` 可见）；插件管理器读取到的 bundle 版本为 1.0.4。
+- 未验证（与 1.0.3 相同的边界）：插件页表单的视觉呈现与从界面点击「保存」的完整链路；编辑器端 MCP 工具的真实调用（验证期间编辑器服务器未运行）；`UNREAL_MCP_URL` 环境变量路径；无 `settings` / `configEditor` 服务的精简 profile 降级行为。
+
 ## 1.0.3 — 2026-10-15
 
 `package.json`：`version: 1.0.3`。
