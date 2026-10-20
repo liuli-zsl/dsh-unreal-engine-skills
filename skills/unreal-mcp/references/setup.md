@@ -11,6 +11,9 @@ Walk the user through them in order. Do not skip the user's `.uproject` edit sil
 
 ## 1. Enable the plugins in the `.uproject`
 
+First confirm that this engine build contains both plugins; this Harness package does not install
+engine plugins or make an older engine support these APIs.
+
 Two plugins are required. `ModelContextProtocol` is the server and transport; `AllToolsets` provides the tools. With only `ModelContextProtocol` enabled the server starts but exposes no tools.
 
 Open the project's `.uproject` file. In the `Plugins` array, ensure both entries:
@@ -58,7 +61,11 @@ A command-line alternative also works: pass `-ModelContextProtocolStartServer` (
 
 The `dsh-unreal-engine-skills` plugin bundles a `@deepseek-ai/dsh-mcp-client` row named `unreal-mcp` pointing at the editor's default endpoint, `http://127.0.0.1:8000/mcp`. No `.mcp.json` or client-config generation is needed: the editor's `ModelContextProtocol.GenerateClientConfig` console command writes configs for other clients (ClaudeCode, Cursor, VSCode, …), which DeepSeek Harness does not read.
 
-If you changed the port or path in step 2, open 插件 → **Unreal Engine 技能** in DeepSeek Harness and set the port (and URL path) in the MCP connection form on the bundle page — saving hot-switches the connection, no restart. Alternatively set `UNREAL_MCP_URL=http://127.0.0.1:9999/mcp` before starting the Harness; the environment variable always wins. The client reconnects with exponential backoff, so the editor does not need to be running when the Harness starts.
+If you changed the port or path in step 2, open 插件 → **Unreal Engine 技能** in DeepSeek Harness and set the port (and URL path) in the MCP connection form on the bundle page — saving hot-switches the connection, no restart. Alternatively set `UNREAL_MCP_URL=http://127.0.0.1:9999/mcp` before starting the Harness; the environment variable always wins. The client reconnects with exponential backoff, so the editor does not need to be running when the Harness starts. On a Harness build whose Loader does not announce volatile config updates, the saved endpoint takes effect on the next reload or restart.
+
+Use an integer port from 1 to 65535 and a path starting with `/` (default `/mcp`). Query strings,
+fragments, spaces and backslashes are rejected; percent-encode other non-path characters. Changing
+the endpoint preserves the MCP row's explicit headers, timeout and reconnect settings.
 
 ## 4. Optional: install the proxy
 

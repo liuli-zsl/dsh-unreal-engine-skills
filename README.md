@@ -1,59 +1,166 @@
 # dsh-unreal-engine-skills
 
-dsh-unreal-engine-skills 是 Epic Games [Unreal Engine Skills for Claude Code](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin) 插件（MIT，上游 3.1.1）的 DeepSeek Harness 移植版。它以单个 bundle 提供三件事：注册 `unreal-mcp` / `create-toolset` / `unreal-skill` 三个运行时技能；接通指向 Unreal 编辑器 `ModelContextProtocol` 服务器的 `unreal-mcp` MCP 连接（端口可在插件页直接修改，保存即热切换）；以及在 UE 工程工作区注入 Unreal 工程上下文提示。
+English | [中文](README.zh.md)
 
-本工作副本的 `package.json` 标记版本为 `1.0.4`。版本标记不代表所有部署形态（本机链接安装、npm 分发、无 settings/configEditor 服务的精简 profile）都已完成实机验证。
+Unofficial [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) port of Epic Games'
+[Unreal Engine Skills for Claude Code](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin)
+(MIT, upstream 3.1.1). One bundle gives an agent three things:
 
-## 从哪里开始
+- **Three runtime skills.** `unreal-mcp` (discover and call Editor toolsets), `create-toolset`
+  (author AI-callable C++/Python toolsets) and `unreal-skill` (author UE Agent Skills inside the
+  editor), registered from [`skills/`](skills/).
+- **The Unreal MCP connection.** A `unreal-mcp` row using `@deepseek-ai/dsh-mcp-client` connects to
+  the editor's `ModelContextProtocol` server (default `http://127.0.0.1:8000/mcp`). The port and URL
+  path are editable on the Harness Plugins page and take effect on save, without restarting.
+- **Unreal project context.** When a session's working directory is inside an Unreal project, a
+  short UE-specific context note is added to the system prompt (the directory is detected by
+  walking upward for a `.uproject` or `GenerateProjectFiles.*`).
 
-1. 安装并启用 bundle：在 Harness 的插件管理器中 `install_bundle` 指向本目录（或 npm 发布后的包名）。bundle 补丁会插入 `unreal-engine-skills`（host 行）与 `unreal-mcp`（`@deepseek-ai/dsh-mcp-client` 行）两行。**以本目录链接方式安装时，先在本仓库执行一次 `pnpm install`（建议 `--frozen-lockfile`；克隆后或新增依赖后都要执行）**：host 半依赖（`@deepseek-ai/schemastery` 等）落地在本仓库 `node_modules`，缺失时插件行会静默保持未激活——技能注册、UE 上下文注入与插件页端口表单全部不生效，插件管理器中表现为该行 fiber 未运行（Config 检查器 status `inactive`）。
-2. 编辑器侧每个项目配置一次：在项目的 `.uproject` 中启用 `ModelContextProtocol` 与 `AllToolsets` 插件；然后在 `<Project>/Saved/Config/<Platform>Editor/EditorPerProjectUserSettings.ini` 中设置 `bAutoStartServer=True`，或在编辑器控制台执行 `ModelContextProtocol.StartServer [port]`。没有 `AllToolsets` 时服务器会启动但没有工具。
-3. 端口默认是编辑器侧的 `8000`。需要换端口时，打开 插件 → **Unreal Engine 技能**：bundle 页面上的「Unreal Engine MCP 连接」表单可以直接改端口和 URL 路径，保存后 `unreal-mcp` 连接立即用新地址重连，无需重启 Harness；`unreal-mcp` 行本身也有「配置」入口打开同一表单。也可以在启动 Harness 前设置 `UNREAL_MCP_URL` 环境变量，它会覆盖表单端口。
-4. 验证：编辑器运行后，让智能体调用 `mcp__unreal-mcp__list_toolsets`（或"列出当前关卡的所有 Actor"）；插件页中 `unreal-mcp` 行显示运行中，且编辑器输出日志有 MCP 服务器启动信息。
+Current version: **1.0.8**. See [Status and verification boundary](#status-and-verification-boundary)
+for what has and has not been verified.
 
-## 端口配置
+## Install
 
-- **插件页表单（推荐）**：端口与 URL 路径是 `unreal-engine-skills` 行的 volatile 配置。保存走 Harness 的设置传输（`settings.mutate` → `configEditor.edit`），行热重载后 host 半把 `unreal-mcp` 行的 `url` 同步为 `http://127.0.0.1:<port><path>`，MCP 客户端随即重连。同步只在 url 实际不同时写补丁，并继承 bundle 行自身的默认配置（`failOnStartupError`、300 秒工具超时、约 1 小时退避重连预算）。
-- **环境变量**：`UNREAL_MCP_URL=http://127.0.0.1:9999/mcp` 在启动 Harness 前设置；它是进程级变量，改完需重启 Harness，且优先级永远高于表单端口。
-- **自定义 transport 保护**：如果用户把 `unreal-mcp` 行改成 stdio 代理（`transport: stdio` + `command`/`args`），端口同步不会触碰该行。
-- **补丁条目的坑**：profile 补丁里同 `id` 的条目会**整体替换**行的配置而不是合并——手写补丁必须写全 `serverName` / `transport` / `url`，只写一个 `url` 会导致 schema 校验失败、插件无法激活。优先用插件页表单或环境变量。
-- 同步实现依赖 `configEditor.edit()` 的 HMR 事务：它在 `hmr.runExclusive` 内运行，而设置保存本身也是 HMR 事务，因此同步经 `hmr.executing.exit()` 逃逸后排队执行（`HMR transactions cannot be nested` 是设计约束，不是缺陷）。
+Requires DeepSeek Harness `>=0.2.0-rc.2 <0.3.0` (declared as `engines.dsh` in
+[`package.json`](package.json)).
 
-## 主要组成
+### From GitHub
 
-| 位置 | 职责与入口 |
+```sh
+dsh plugin --profile <your-profile> add github:liuli-zsl/dsh-unreal-engine-skills
+```
+
+For `dsh web`, use the `web` profile. On the official Desktop app, prefer the app's **Plugins**
+page and enter the GitHub source there. Command-line management of `desktop` requires the command
+installed by Desktop, an initialized profile, and fully quitting the app first; the npm CLI cannot
+manage that profile. See the [official CLI reference](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/README.md).
+The bundle patch adds two loader rows: `unreal-engine-skills` (this package) and `unreal-mcp`
+(`@deepseek-ai/dsh-mcp-client`).
+
+### From the plugin market
+
+This plugin is planned for submission to the community catalog used by `dshmarket`; it is not yet
+listed. After acceptance, users of that catalog can search for "Unreal Engine Skills". Harness
+0.2.1+ also supports this catalog in **Plugins → Discover → Index sources**; it must be added there
+if not already configured. See [`docs/publishing.md`](docs/publishing.md) for the source and submission.
+
+### From a local checkout (development)
+
+Point the Harness plugin manager's `install_bundle` at this directory, or add the directory with
+`dsh plugin add`. When installed as a link to this checkout, run `pnpm install --frozen-lockfile`
+here first: the host-side dependency (`@deepseek-ai/schemastery`) must be present in this
+repository's `node_modules`, otherwise the plugin row silently stays inactive and none of the
+skills, context injection or port form work.
+
+## Editor setup (once per project)
+
+Your engine build must actually contain the `ModelContextProtocol` and `AllToolsets` plugins.
+This package does not install them, and does not claim support for every UE5 release. The exact
+engine version/branch and Windows/Linux behavior have not yet been recorded as verified.
+
+1. Enable the `ModelContextProtocol` and `AllToolsets` plugins in the project's `.uproject`.
+   Without `AllToolsets` the server starts but exposes no tools.
+2. Start the MCP server when the editor runs: either set `bAutoStartServer=True` under
+   `[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]` in
+   `<Project>/Saved/Config/<Platform>Editor/EditorPerProjectUserSettings.ini`, or run
+   `ModelContextProtocol.StartServer [port]` in the editor console.
+3. The default port is `8000`.
+
+## Port configuration
+
+- **Plugins page form (recommended).** Port and URL path are volatile config of the
+  `unreal-engine-skills` row. Saving goes through Harness settings (`settings.mutate` →
+  `configEditor.edit`); the host half then synchronizes the `unreal-mcp` row's `url` to
+  `http://127.0.0.1:<port><path>` and the MCP client reconnects, without a restart. The sync runs
+  both for a settings save (the Loader announces committed volatile changes) and after a plugin
+  reload, and writes only when the url actually changes. It preserves current explicit settings
+  (including headers, timeouts and reconnect policy), with bundle defaults for fields that have not
+  been overridden (`failOnStartupError`, 300 s tool timeout, ~1 h backoff reconnect budget). On a
+  Harness build that does not announce volatile updates, a saved endpoint takes effect on the next
+  reload or restart.
+- **Valid input.** Port must be an integer from 1 to 65535. The path must start with `/`, contain
+  no spaces, backslashes, query or fragment, and use percent encoding for characters outside the
+  RFC 3986 path set (for example `/mcp%20endpoint`). Both the form and host schema validate it.
+- **Environment variable.** `UNREAL_MCP_URL=http://127.0.0.1:9999/mcp` set before starting
+  Harness. It is process-wide (restart required) and always takes precedence over the form.
+- **Custom transport guard.** If you change the `unreal-mcp` row to a stdio proxy
+  (`transport: stdio` with `command`/`args`), the port sync leaves that row untouched.
+- **Patch entry caveat.** In a profile patch, an entry with the same `id` *replaces* the row's
+  config instead of merging. A hand-written patch must repeat `serverName` / `transport` / `url`;
+  writing only `url` fails schema validation and the plugin will not activate. Prefer the form or
+  the environment variable.
+- The sync relies on the HMR transaction around `configEditor.edit()`: it escapes the nested
+  transaction check with `hmr.executing.exit()` and runs on the HMR queue
+  (`HMR transactions cannot be nested` is a design constraint, not a defect).
+
+## Verify
+
+With the editor running, ask the agent to call `mcp__unreal-mcp__list_toolsets` (or "list all actors
+in the current level"). On the Plugins page the `unreal-mcp` row should be running, and the editor
+output log should show the MCP server startup message.
+
+## Security
+
+The bundle gives an agent broad live access to a running editor, including
+`ProgrammaticToolset.execute_tool_script` (arbitrary Python inside the editor process). Treat it
+like "letting an assistant run arbitrary code". Commit or shelve before long MCP sessions and
+review the diff afterwards. The upstream
+[README](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin#security) has the
+full threat model.
+
+## Status and verification boundary
+
+Version 1.0.8 has automated Node tests for schema validation, preservation of custom MCP settings,
+environment-variable precedence, transport protection, HMR transaction escape, skill registration,
+project context, and the volatile-settings sync path. Browser tests evaluate the actual bundle
+against shared-primitives contract shims; they do not render the real Harness UI.
+
+Earlier releases were checked online against DeepSeek Harness 0.2.1-rc.2: schema visibility, port
+sync, client bundle delivery and slot registration. Those historical results are recorded in
+[CHANGELOG.md](CHANGELOG.md) and are not a fresh acceptance of 1.0.8.
+
+Live verification of 1.0.6 confirmed the form, the invalid-value blocking and the settings write,
+but found that a saved endpoint did not reach the MCP row until a restart; 1.0.7 fixed that and the
+save flow was re-checked live on 2026-10-21: a 9999 → 8000 save updated `unreal-mcp.url` in the same
+process, with no restart and no write loop. Still required for 1.0.8: a clean-profile install and a
+successful read-only tool call against a running editor. The sync depends on DSH internals
+(`configEditor`, the HMR queue, `hmr.executing.exit()`, `loader/volatile-update`); re-check after DSH
+upgrades. Evidence is recorded in [CHANGELOG.md](CHANGELOG.md).
+
+## Repository layout
+
+| Path | Purpose |
 | --- | --- |
-| `package.json` | 包清单：`dsh.bundle.patch` 指向 bundle 补丁；`dsh.client` 声明浏览器半侧及其 `inject` 模块；`exports["./client"]` 指向 `lib/client.js`；依赖 `@deepseek-ai/schemastery`。 |
-| `cordis.patch.yml` | bundle 补丁层：插入 `unreal-engine-skills` 与 `unreal-mcp` 两行；`unreal-mcp` 行的 `url` 默认取 `UNREAL_MCP_URL` 环境变量（`!!js` 表达式），其余字段为默认连接参数。 |
-| `lib/index.js` | host 半：解析 `skills/` 目录注册技能；UE 工程检测与系统提示词上下文注入（沿会话工作目录向上找 `.uproject` 或 `GenerateProjectFiles.*`，每次模型步骤按 cwd 缓存重算）；导出 volatile `Config`（`port` 1–65535 默认 8000、`path` 默认 `/mcp`）；端口到 `unreal-mcp` 行 url 的同步。 |
-| `lib/client.js` | 浏览器半：手写的 `__ModuleLoader__.load` bundle（无构建步骤）。通过 `plugins.bundle.config`（key=`dsh-unreal-engine-skills`）在 bundle 页面渲染端口表单，通过 `plugins.row.config`（key=`dsh-unreal-engine-skills#unreal-mcp`）给 `unreal-mcp` 行加「配置」入口；两个注册都由 `configForms.whileServed` 门控。 |
-| `skills/` | 三个技能的 `SKILL.md` 与 reference 文档（`unreal-mcp` 技能带 `setup.md` / `operations.md`）。 |
-| `locale/` | 插件本地化字典。 |
-| `icon.svg` | bundle 图标。 |
+| [`package.json`](package.json) | Package manifest: `dsh.bundle.patch`, `dsh.client` (browser half and its `inject` modules), `exports["./client"]`, and the `engines.dsh` compatibility range. |
+| [`cordis.patch.yml`](cordis.patch.yml) | Bundle patch layer: inserts the `unreal-engine-skills` row and the `unreal-mcp` row (whose `url` defaults to `UNREAL_MCP_URL` via a `!!js` expression). |
+| [`lib/index.js`](lib/index.js) | Host half: skill registration from `skills/`, Unreal project detection and system-prompt context injection, the volatile `Config` (`port`, `path`) and the url sync. |
+| [`lib/client.js`](lib/client.js) | Browser half: a hand-written `__ModuleLoader__.load` bundle (no build step) rendering the port form on the bundle page and the "Configure" entry on the `unreal-mcp` row. |
+| [`skills/`](skills/) | The three skills' `SKILL.md` files and the `unreal-mcp` reference documents (`setup.md`, `operations.md`). |
+| `locale/` | Localization dictionaries. |
+| [`docs/publishing.md`](docs/publishing.md) | Release, npm and plugin-market submission steps. |
+| [`LICENSE`](LICENSE), [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) | License and upstream attribution. |
 
-`node_modules/` 与 `pnpm-lock.yaml` 是本仓库链接安装时的依赖落地物；`lib/client.js` 运行时只依赖 Web 应用内置的 `react` 与客户端原语，不依赖本仓库 `node_modules`。
+## Related projects
 
-## 专题文档
+- [EpicGames/unreal-engine-skills-for-claude-code-plugin](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin)
+  — the upstream Claude Code plugin (MIT). This repository is a port of it.
+- [PeterTXPan/dsh-unreal-mcp](https://github.com/PeterTXPan/dsh-unreal-mcp) — another unofficial
+  DeepSeek Harness bundle for the Unreal MCP server, independently maintained. This project
+  differs in its plugin-page port form with hot reload and its targeting of the current 0.2.x
+  Harness line; the two can be evaluated independently.
 
-- [MCP 首次配置与代理安装](skills/unreal-mcp/references/setup.md) / [MCP 排障与恢复](skills/unreal-mcp/references/operations.md)
-- [AI 与贡献者协作约定：每项修改递增版本并同步文档](AGENTS.md) / [变更记录](CHANGELOG.md)
+## Development
 
-专题文档描述各自功能；修改或排查时，仍需以当前分支的 `package.json`、`cordis.patch.yml`、源码和实际运行结果核对。
+There is no build step. Repo conventions (version bump, documentation sync, verification scope) are
+in [AGENTS.md](AGENTS.md); changes are recorded in [CHANGELOG.md](CHANGELOG.md). Publishing and
+marketplace steps are in [`docs/publishing.md`](docs/publishing.md).
 
-## 平台与验证边界
+Run `pnpm install --frozen-lockfile --ignore-scripts`, then `pnpm test`. The tests use Node's built-in
+runner and do not compile code. The CI workflow runs the same checks on Node 22 and 24; its remote
+result must be checked after pushing.
 
-本插件面向 DeepSeek Harness 0.2.1-rc.2 系桌面部署，`package.json` 的 `engines.dsh` 声明为 `>=0.2.0-rc.2 <0.3.0`（兼容 0.2.0-rc.2 起；从 0.2.1 起该字段是运行时唯一的兼容性判据，声明后 `@deepseek-ai/dsh-*` 的 peer 范围不再参与判定）。已在运行中的 Harness 实例上实测并确认的项：
+## License
 
-- host 半新代码经 HMR 热替换加载，volatile `Config` schema 在线可见（Config 检查器：`port` 1–65535、`path`，均带 volatile 标记）；
-- 端口同步端到端往返：改端口 → 行热重载 → 同步把 `unreal-mcp` 行的完整配置（含 url）写入 profile 补丁 → 行热重载重连（9998 → 9999 实测）；
-- 客户端 bundle 已组合并由 `/plugins/??dsh-unreal-engine-skills/client.js` 提供服务（HTTP 200）；浏览器内 `plugins.bundle.config` 与 `plugins.row.config` 两个槽位均已注册且 active。
-
-尚未验证的项：表单的视觉呈现与从界面点击「保存」的完整链路（写入通道与上述实测路径相同，但未实际点击）；编辑器端 MCP 工具的真实调用与结果（验证期间编辑器服务器未运行）；`UNREAL_MCP_URL` 环境变量路径；无 `settings` / `configEditor` 服务的精简 profile 降级行为。此外，同步实现依赖 DSH 的 `configEditor`、HMR 队列与 `hmr.executing.exit()` 等内部机制，DSH 升级后需按 [AGENTS.md](AGENTS.md) 复核。
-
-## 安全
-
-本 bundle 给智能体对运行中编辑器的广泛实时访问，包括 `ProgrammaticToolset.execute_tool_script`（在编辑器进程内执行任意 Python）。请按"让助手运行任意代码"同等对待。长 MCP 会话前提交保存、事后检查差异；上游 [README](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin#security) 有完整威胁模型。
-
-## 致谢
-
-技能内容与 hook 逻辑改编自 [EpicGames/unreal-engine-skills-for-claude-code-plugin](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin)（MIT，© Epic Games）。改动：Claude Code 的工具/hook 机制替换为 Harness 等价物（`mcp__unreal-mcp__*` 工具名、`systemPrompt` 运行时上下文替代 bash SessionStart hook、`@deepseek-ai/dsh-mcp-client` 行替代生成的 `.mcp.json`），并新增插件页端口配置表单。
+[MIT](LICENSE) © 2026 liuli-zsl. Adapted skill material retains Epic Games' MIT notice; see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Unreal Engine is a trademark of Epic Games, Inc.
+This project is unofficial and is not affiliated with or endorsed by Epic Games.

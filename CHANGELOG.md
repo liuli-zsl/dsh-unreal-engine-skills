@@ -2,6 +2,52 @@
 
 从 2026-10-15 文档建档起记录可核实的变更。更早版本的发布日期和改动历史未在本工作副本中核实，因此不补写历史条目。变更类型与验证范围均按实际执行内容记录，静态检查不能代替运行实测。
 
+## 1.0.8 — 2026-10-21
+
+`package.json`：`version: 1.0.8`。本版只调整仓库发布口径，运行时代码、测试、`cordis.patch.yml` 与市场条目均未修改。
+
+- 按维护者要求，内部交叉审查报告不随仓库发布：`.gitignore` 增加 `docs/cross-review-*.zh.md`（文件保留在本地，不再出现在待提交列表），README / README.zh 与 `docs/publishing.md` 不再链接它，证据与剩余验收清单改由 `CHANGELOG.md` 承载。1.0.6 条目里「新增交叉审查报告」的表述保持不变（当时确实在本地新增了该报告），按本版约定该文件不发布。
+- `docs/publishing.md` 的发布版本引用（提交信息提示、tag、Release tarball 示例）更新为 1.0.8。
+- 验证（静态）：`node --check lib/index.js lib/client.js` 通过；`pnpm test` 16/16 通过；`package.json` JSON、文档相对链接、版本一致性、`git diff --check` 通过；`git status -uall` 中不再包含 `docs/cross-review-1.0.6.zh.md`。本版不涉及运行时行为，未做新的在线或界面实测；等待推送后的远端 CI 结果。
+
+## 1.0.7 — 2026-10-21
+
+`package.json`：`version: 1.0.7`；`lib/index.js` 增加 volatile 保存后的 url 同步，`test/connection.test.js` 增至 16 项；`lib/client.js` 与 `cordis.patch.yml` 未修改。
+
+- 修复真机验收发现的同步缺口：插件页保存端口（实测 8000 → 9999）后，profile 补丁只写入了 `unreal-engine-skills` 的 `config.port`，`unreal-mcp` 行仍无 config/url；重启 Harness 后启动路径才补写了完整 `unreal-mcp` config（url 9999，超时与重连默认值保留）。根因是 DSH 0.2.1 的 Loader 把「仅 volatile 字段变化」视为不重挂载更新（`equalExceptVolatile` / `_commitVolatile`），只原地更新运行中的 `Config` 并发 `loader/volatile-update` 事件，不重新执行 `apply()`；而 url 同步原先只挂在 apply 后调度。
+- 修复方式：`apply` 中监听 fiber 上下文的 `loader/volatile-update`（只处理 `port` / `path` 路径），保存后重新触发同步；保留 apply 后的启动/重载同步，两条路径共用 `requested` 去重状态，同一目标 url 只写一次；`configEditor.edit` 失败时清除去重状态，留给下一次变化或重载重试。旧版 Harness 若无该事件，退回原有启动/重载同步行为。
+- 文档：README / README.zh 的端口配置改为「保存（volatile 更新通告）与重载后都会同步」并注明旧版回退；`skills/unreal-mcp/references/setup.md` 同步说明；AGENTS.md 补记该事件与去重约定；`docs/publishing.md` 的发布版本引用更新为 1.0.7。
+- 验证（静态 + 真机前置证据）：`node --check lib/index.js lib/client.js` 通过；`pnpm test` 16/16 通过，新增回归测试覆盖「volatile 端点变更触发同步、无关字段不触发、重复通告不重复写、保留默认超时」。1.0.6 的真机验收已确认表单呈现、非法值拦截（红字提示、保存禁用）与设置写入（profile 补丁出现 `port: 9999`，无循环写入）；保存流程的复验结果见下条，编辑器端工具调用仍未验证。
+- 保存流程真机复验通过（2026-10-21 00:19）：重启加载 1.0.7 后（新进程 00:19:16，晚于代码改动），在插件页把端口从 9999 改回 8000 并保存；**同一进程内** profile 补丁的 `unreal-mcp.url` 当场更新为 `http://127.0.0.1:8000/mcp`，`unreal-engine-skills` 行回到默认（config 被移除），无需重启；保存后 5 秒以上补丁哈希稳定，无循环写入；插件行 Config 状态仍为 schema。仍待验证：全新 profile 安装、编辑器端只读工具调用。
+
+## 1.0.6 — 2026-10-20
+
+`package.json`：`version: 1.0.6`；新增 `scripts.test`（`node --test test/*.test.js`）。运行时代码修复见下（`lib/index.js`、`lib/client.js`）；`cordis.patch.yml` 未修改。
+
+- 修复端口/路径同步覆盖 MCP 行显式配置：`configEditor.edit` 回调保留最新 current 的请求头、超时、重连策略等字段，只替换 `url`；未覆盖字段仍继承 bundle 默认值。
+- host schema 与插件页字段均校验 1–65535 的整数端口与 RFC 3986 路径；拒绝小数端口、主机替换形式、查询、片段、空格、反斜杠和错误的百分号编码。表单构造的最终 URL 额外检查 HTTP loopback 地址；显式 `UNREAL_MCP_URL` 仍保持原有优先级。
+- 路径字段补充中英文验证提示；环境变量说明明确同时覆盖端口和路径。
+- 增加 15 项 Node 内置运行器测试，覆盖 schema、浏览器字段契约、配置保留、环境变量、自定义 transport、HMR 事务逃逸、错误处理、技能注册和工程上下文；新增 Node 22/24 的 CI 定义，不引入编译步骤或新依赖。
+- 更新双语 README、端口设置 reference 和协作约定；发布文档补齐先提交再打标签的步骤、Desktop CLI 前提与原生 Discover 索引接入。增加可直接复制的市场条目与 `docs/cross-review-1.0.6.zh.md` 交叉审查报告。
+- 本次验证：修复前同组测试 7 通过 / 8 失败，修复后 15/15 通过；在独立目录使用 frozen lockfile 和禁用脚本重新安装后仍 15/15 通过。原始运行记录为 Node v24.19.0 / pnpm 11.25.0；2026-10-20 独立复验使用 Node v24.21.0 / pnpm 11.28.5，结果一致。两个 JS 分别通过 `node --check`；打包预览含 16 个文件及两份许可文件；4 个生产依赖的 `pnpm audit --prod` 返回 0 条已知漏洞；市场 YAML 和 CI YAML 解析通过。
+- 独立复验（2026-10-20，另一位审查者）：8 个核心文件 SHA-256 与报告一致；当前工作区 15/15 通过，修复前源码 7 通过 / 8 失败；独立目录 frozen install 后仍 15/15，`pnpm audit --prod` 无已知漏洞；`node --check`、`pack --dry-run`（16 个文件）、`git diff --check`、市场/CI YAML 解析通过；远端 `main` 仍为 `3b39846`，本地未提交、未推送。对照实际安装的 DSH 0.2.1-rc.2 源码确认：`configEditor.edit` 的 current/inherited 语义、mcp-client 的 headers/超时/重连配置、HMR `executing` 的 AsyncLocalStorage 逃逸、前端 `settingsNumberField` / `SettingsFormModel` 的 parse 与 `invalidLabel` 契约均支持本次修复；旧代码拼接 `@evil.com/mcp` 会把 host 解析为 `evil.com`，确认路径缺陷属安全问题。运行中的 Harness 进程启动于本次改动之前，Config 检查器仍显示旧 schema，因此复验不含真实 UI/编辑器验收。
+- 重启后只读复验（2026-10-20 23:58）：新 Harness 进程启动于本次改动之后；Config 检查器中 `include:unreal-engine-skills` 显示 1.0.6 schema（`port` 为 integer、`path` 带 pattern 与预期的 native-validation limitation），`unreal-mcp` 行仍为 schema；客户端 `plugins.bundle.config`（key=`dsh-unreal-engine-skills`）与 `plugins.row.config`（key=`dsh-unreal-engine-skills#unreal-mcp`）两个槽位均 active；启动未写 profile 补丁（mtime 未变）。仍未覆盖：界面点击保存、保存后重启持久化、编辑器端工具调用。
+- 验证边界：浏览器测试使用共享组件契约桩，host 测试使用模拟配置服务；未运行新版本真实 UI 保存/持久化、全新 Harness 安装或编辑器工具调用；Node 22 与远端 GitHub CI 尚未运行。本地文本/链接/版本一致性检查结果见交叉审查报告。历史在线结果不算作本版实测。
+- GitHub 发布、topic、市场 PR、截图和旧公开提交元数据清理仍为发布前事项；本次没有提交或推送仓库。未来提交身份的本地设置不改变旧提交。
+
+## 1.0.5 — 2026-10-20
+
+`package.json`：`version: 1.0.5`；新增 `author`、`repository`、`bugs`、`homepage`、`keywords`；`files` 增加 `LICENSE`、`THIRD_PARTY_NOTICES.md`、`README.zh.md`。运行时代码、`cordis.patch.yml` 与浏览器半 bundle 未修改。
+
+- 首次公开发布前的门面补齐（只涉及清单与文档，未改变插件行为）：
+  - 新增 `LICENSE`（MIT，© 2026 liuli-zsl）与 `THIRD_PARTY_NOTICES.md`（Epic Games 上游 MIT 全文、被改编的部分、商标与非官方声明）；补上 `package.json` 早已声明但仓库缺失的许可证正文。
+  - `README.md` 改写为面向外部读者的英文版（从插件市场 / GitHub / 本地目录安装、编辑器侧配置、端口配置、验证、安全、验证边界、仓库结构、相关项目）；原中文内容整理为 `README.zh.md` 并同步版本号，删除「本工作副本」等内部表述。
+  - 新增 `docs/publishing.md`：awesome-dsh-plugin 收录条目（`data/plugins/liuli-zsl__dsh-unreal-engine-skills.yml`，category `skill`）、提交与更新步骤、可选 npm 与 Release tarball 流程、截图约定。
+  - `AGENTS.md`：导航与版本同步条目改为英文 `README.md` + 中文 `README.zh.md`；新增公开文档不得写入真实姓名、邮箱、本机路径的规定，以及许可证/商标声明不得删除的约定。
+  - 仓库侧事实：GitHub 仓库已公开为 `https://github.com/liuli-zsl/dsh-unreal-engine-skills`；本地 `origin` 仍指向改名前的旧用户名（GitHub 会重定向），推送前可更新。
+- 验证（静态）：`package.json` 通过 `python3 -m json.tool`；`docs/publishing.md` 内嵌条目经 Ruby YAML 解析且 `description.en` 以句号结尾，`name` / `category` 格式符合精选列表要求；各 README 与 `docs/publishing.md` 的相对链接逐条核对存在；工作区扫描确认新增与修改文件不含旧用户名、真实姓名、个人邮箱与本机绝对路径；各文档版本号与 `package.json` 一致。本次未改运行时代码，未做在线探针，也未重新验证 UI 与编辑器端；历史实测结果不作为 1.0.5 的结果。
+- 待仓库维护者在 GitHub 侧完成：添加 `dsh-plugin` topic；提交并推送本次改动；向 awesome-dsh-plugin 提 PR；补充 1–8 张截图与 `screenshots.json`；可选 npm 发布。
+
 ## 1.0.4 — 2026-10-18
 
 `package.json`：`version: 1.0.4`；新增 `engines.dsh: ">=0.2.0-rc.2 <0.3.0"`。
