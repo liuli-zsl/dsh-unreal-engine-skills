@@ -14,7 +14,7 @@ Epic Games [Unreal Engine Skills for Claude Code](https://github.com/EpicGames/u
 - **UE 工程上下文。** 会话工作目录位于 Unreal 工程内时，向系统提示词注入一段简短的 UE 上下文提示
   （沿目录向上查找 `.uproject` 或 `GenerateProjectFiles.*` 判断）。
 
-当前版本：**1.0.8**。已验证与未验证的范围见[平台与验证边界](#平台与验证边界)。
+当前版本：**1.0.9**。已验证与未验证的范围见[平台与验证边界](#平台与验证边界)。
 
 ## 安装
 
@@ -33,9 +33,9 @@ dsh plugin --profile <你的 profile> add github:liuli-zsl/dsh-unreal-engine-ski
 
 ### 从插件市场安装
 
-本插件计划申请 `dshmarket` 使用的社区目录收录，目前尚未上架。收录后，使用该目录的用户可搜索
-“Unreal Engine Skills”。Harness 0.2.1+ 的**插件 → 发现 → 索引源**也支持添加该目录；未配置时需要先添加。
-目录来源和提交步骤见 [`docs/publishing.md`](docs/publishing.md)。
+本插件已被 `dshmarket` 使用的社区目录[收录](https://awesome-dsh-plugin.com/p/liuli-zsl/dsh-unreal-engine-skills/)，[市场 PR #8355](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/8355) 于 2026-10-20（UTC）合并。
+
+该社区目录供 Harness 0.2.1+ **插件 → 发现**使用的 npm 版本索引，覆盖范围小于完整 GitHub 目录：其生成器要求 npm 包、确切版本和发布时间。2026-10-21 核对时，本插件目录记录中的 npm 包和版本为空，未出现在该索引；本包继续仅通过 GitHub 分发并保留 `private: true`。这是该目录生成器的限制，不是所有 Discover 索引的通用要求。详见 [`docs/publishing.md`](docs/publishing.md)。
 
 ### 从本地目录安装（开发）
 
@@ -92,16 +92,18 @@ UE5 发行版都支持。实测引擎版本、分支和 Windows/Linux 行为目�
 
 ## 平台与验证边界
 
-1.0.8 的 Node 自动测试覆盖 schema 校验、MCP 自定义配置保留、环境变量优先、自定义 transport 保护、
+1.0.9 仅调整许可证与发布文档；验证结果和剩余验收项见 [CHANGELOG.md](CHANGELOG.md)。
+
+1.0.9 的 Node 自动测试覆盖 schema 校验、MCP 自定义配置保留、环境变量优先、自定义 transport 保护、
 HMR 事务逃逸、技能注册、项目上下文以及 volatile 设置保存后的同步路径。浏览器侧测试在共享组件契约桩上
 执行真实 bundle，不渲染实际界面。
 
 更早版本在 DeepSeek Harness 0.2.1-rc.2 上做过在线检查，包括 schema 可见、端口同步、客户端 bundle
-服务与槽位注册；历史结果保留在 [CHANGELOG.md](CHANGELOG.md)，不作为 1.0.8 的新验收结果。
+服务与槽位注册；历史结果保留在 [CHANGELOG.md](CHANGELOG.md)，不作为 1.0.9 的新验收结果。
 
 1.0.6 的真机验收确认了表单呈现、非法值拦截与设置写入，但发现「保存端点后 `unreal-mcp` 行的 url 要等
 重启才更新」；1.0.7 修复了该缺口，并于 2026-10-21 真机复验：端口 9999 → 8000 保存后同一进程内
-`unreal-mcp.url` 立即更新，无需重启且无循环写入。1.0.8 仍需：全新 profile 安装、以及对运行中编辑器
+`unreal-mcp.url` 立即更新，无需重启且无循环写入。1.0.9 仍需：全新 profile 安装、以及对运行中编辑器
 成功执行一次只读工具调用。同步依赖 DSH 内部机制（`configEditor`、HMR 队列、`hmr.executing.exit()`、
 `loader/volatile-update`），DSH 升级后需复核。证据记录在 [CHANGELOG.md](CHANGELOG.md)。
 

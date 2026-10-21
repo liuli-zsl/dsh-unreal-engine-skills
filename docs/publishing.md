@@ -15,11 +15,11 @@ submitting the catalog entry; uncommitted local files do not reach GitHub instal
 - [x] MIT license plus upstream Epic Games notice ([`LICENSE`](../LICENSE), [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md)).
 - [x] Public repository (`liuli-zsl/dsh-unreal-engine-skills`).
 - [x] Public-facing README in English and Chinese ([`README.md`](../README.md), [`README.zh.md`](../README.zh.md)).
-- [ ] Future Git commits use the intended public name and GitHub noreply address; decide how to handle old public commit metadata.
-- [ ] Complete the real Harness/UI/editor checks listed in the current [`CHANGELOG.md`](../CHANGELOG.md) entry.
-- [ ] `dsh-plugin` topic on the GitHub repository (required by the list's CI).
-- [ ] Current working tree pushed to GitHub.
-- [ ] Listing PR opened against `awesome-dsh-plugin` (below).
+- [x] Future Git commits use `liuli-zsl` and a GitHub noreply address (local configuration checked); old public commit metadata is unchanged.
+- [ ] Complete the remaining live checks: clean-profile installation and a read-only editor tool call (see [`CHANGELOG.md`](../CHANGELOG.md)).
+- [x] `dsh-plugin` topic on the GitHub repository (required by the list's CI).
+- [ ] Current working tree pushed to GitHub (pre-commit verification snapshot: remote `main` is v1.0.8 / `6286b60`; v1.0.9 is not yet published).
+- [x] [Listing PR #8355](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/8355) merged on 2026-10-20 at 17:52:16 UTC.
 - [ ] Screenshots added (optional, recommended — see below).
 
 ## Releasing
@@ -46,19 +46,19 @@ submitting the catalog entry; uncommitted local files do not reach GitHub instal
    ```sh
    git diff --cached --check
    git diff --cached
-   git commit -m "Fix MCP endpoint configuration and prepare v1.0.8"
+   git commit -m "Clarify licensing and marketplace documentation for v1.0.9"
    git status --short
    git show HEAD:package.json
    ```
 
    Stop if the working tree still contains intended release changes or `HEAD:package.json` does
-   not say `1.0.8`. Do not tag the old HEAD while the release files remain uncommitted. Resolve
+   not say `1.0.9`. Do not tag the old HEAD while the release files remain uncommitted. Resolve
    the privacy decision before pushing; changing future Git identity does not scrub old commits.
 4. The maintainer can then tag and push that reviewed commit (only the intended tag):
 
    ```sh
-   git tag v1.0.8
-   git push origin main v1.0.8
+   git tag v1.0.9
+   git push origin main v1.0.9
    ```
 
 5. Check GitHub's actual files and CI results. Create a GitHub Release for the tag with the matching
@@ -72,10 +72,11 @@ an entry **to that list repository** — not to the market application repositor
 (`dsh-market/dsh-market`). Rules and review criteria are documented in its
 [contributing.md](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/blob/main/contributing.md).
 
-Harness 0.2.1+ can consume the same catalog in **Plugins → Discover → Index sources** using
-`https://cdn.jsdelivr.net/npm/dsh-plugin-catalog/index.json`. A catalog listing only makes the plugin
-discoverable to clients that use that source; it does not enable a new source for every user.
-See the [market's index instructions](https://github.com/dsh-market/dsh-market#readme).
+The plugin is [listed in the catalog](https://awesome-dsh-plugin.com/p/liuli-zsl/dsh-unreal-engine-skills/); PR #8355 is merged. The steps below are retained as the submission procedure; future listing changes use the update procedure.
+
+The catalog's npm-version index for Harness 0.2.1+ **Plugins → Discover** has narrower coverage than its full GitHub catalog. The upstream [index generator](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/blob/main/scripts/lib/market-index.mjs) requires an npm package, an exact version and its publish time; it currently skips GitHub-only entries. This is a generator limitation, not a requirement of every Discover index.
+
+On 2026-10-21, the [full catalog](https://awesome-dsh-plugin.com/plugins.json) included this plugin with `npm: null` and `version: null`, while the published npm-version index omitted it. The package remains GitHub-only with `private: true`; catalog acceptance does not establish Discover-index inclusion. npm publication remains optional and requires a separate release decision.
 
 ### Submission steps
 
@@ -159,10 +160,10 @@ To publish:
    `icon.svg`, `cordis.patch.yml`, `LICENSE`, `THIRD_PARTY_NOTICES.md` and `README.zh.md`; npm also
    includes `package.json` and the main README automatically).
 3. Note that this package ships plain JavaScript with no build step, so installing from GitHub
-   source works as well; npm mainly adds install speed and download statistics.
+   source works as well; npm can make the package eligible for this catalog's npm-version index once its mapping, exact version and publish time are recorded. Verify index inclusion after publication; publishing alone is not evidence of inclusion.
 
 ## Prebuilt tarball (optional)
 
 A GitHub Release asset can be offered instead of a source install. Attach a `.tgz` and keep the
 asset name free of the version if you plan to use `releases/latest/download/...`, or pin the tag:
-`https://github.com/liuli-zsl/dsh-unreal-engine-skills/releases/download/v1.0.8/dsh-unreal-engine-skills.tgz`.
+`https://github.com/liuli-zsl/dsh-unreal-engine-skills/releases/download/v1.0.9/dsh-unreal-engine-skills.tgz`.

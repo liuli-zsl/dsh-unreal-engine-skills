@@ -16,7 +16,7 @@ Unofficial [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) p
   short UE-specific context note is added to the system prompt (the directory is detected by
   walking upward for a `.uproject` or `GenerateProjectFiles.*`).
 
-Current version: **1.0.8**. See [Status and verification boundary](#status-and-verification-boundary)
+Current version: **1.0.9**. See [Status and verification boundary](#status-and-verification-boundary)
 for what has and has not been verified.
 
 ## Install
@@ -39,10 +39,9 @@ The bundle patch adds two loader rows: `unreal-engine-skills` (this package) and
 
 ### From the plugin market
 
-This plugin is planned for submission to the community catalog used by `dshmarket`; it is not yet
-listed. After acceptance, users of that catalog can search for "Unreal Engine Skills". Harness
-0.2.1+ also supports this catalog in **Plugins → Discover → Index sources**; it must be added there
-if not already configured. See [`docs/publishing.md`](docs/publishing.md) for the source and submission.
+This plugin is [listed in the community catalog](https://awesome-dsh-plugin.com/p/liuli-zsl/dsh-unreal-engine-skills/) used by `dshmarket`; [market PR #8355](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/8355) merged on 2026-10-20 (UTC).
+
+The catalog's npm-version index for Harness 0.2.1+ **Plugins → Discover** is narrower than its full GitHub catalog: its generator requires an npm package, an exact version and its publish time. This plugin's catalog record has no npm package or version, and it is absent from that index as checked on 2026-10-21. It remains GitHub-only with `private: true`. This is a limit of that catalog's generator, not a requirement of every Discover index. See [`docs/publishing.md`](docs/publishing.md).
 
 ### From a local checkout (development)
 
@@ -110,19 +109,19 @@ full threat model.
 
 ## Status and verification boundary
 
-Version 1.0.8 has automated Node tests for schema validation, preservation of custom MCP settings,
+Version 1.0.9 changes only licensing and release documentation. The existing automated Node tests cover schema validation, preservation of custom MCP settings,
 environment-variable precedence, transport protection, HMR transaction escape, skill registration,
 project context, and the volatile-settings sync path. Browser tests evaluate the actual bundle
 against shared-primitives contract shims; they do not render the real Harness UI.
 
 Earlier releases were checked online against DeepSeek Harness 0.2.1-rc.2: schema visibility, port
 sync, client bundle delivery and slot registration. Those historical results are recorded in
-[CHANGELOG.md](CHANGELOG.md) and are not a fresh acceptance of 1.0.8.
+[CHANGELOG.md](CHANGELOG.md) and are not a fresh acceptance of 1.0.9.
 
 Live verification of 1.0.6 confirmed the form, the invalid-value blocking and the settings write,
 but found that a saved endpoint did not reach the MCP row until a restart; 1.0.7 fixed that and the
 save flow was re-checked live on 2026-10-21: a 9999 → 8000 save updated `unreal-mcp.url` in the same
-process, with no restart and no write loop. Still required for 1.0.8: a clean-profile install and a
+process, with no restart and no write loop. Still required for 1.0.9: a clean-profile install and a
 successful read-only tool call against a running editor. The sync depends on DSH internals
 (`configEditor`, the HMR queue, `hmr.executing.exit()`, `loader/volatile-update`); re-check after DSH
 upgrades. Evidence is recorded in [CHANGELOG.md](CHANGELOG.md).

@@ -2,6 +2,16 @@
 
 从 2026-10-15 文档建档起记录可核实的变更。更早版本的发布日期和改动历史未在本工作副本中核实，因此不补写历史条目。变更类型与验证范围均按实际执行内容记录，静态检查不能代替运行实测。
 
+## 1.0.9 — 2026-10-21
+
+`package.json`：`version: 1.0.9`，保留 `private: true`。本版仅调整许可证、清单版本与发布文档；运行时代码、测试、bundle 补丁、市场条目与第三方声明均未修改。
+
+- `LICENSE` 保留标准 MIT 全文及 `Copyright (c) 2026 liuli-zsl`，移除末尾附加项目说明，以便许可证识别；对应的移植说明、Epic Games MIT 全文及商标声明继续保留在原样未动的 `THIRD_PARTY_NOTICES.md`。提交前核对时 GitHub 返回 `NOASSERTION`，推送后是否识别为 MIT 仍待确认，不承诺识别结果。
+- 双语 README 更新当前版本与市场收录状态，链接目录页及已合并的市场 PR #8355（2026-10-20 UTC）；区分完整社区目录与供 Discover 使用的 npm 版本索引。2026-10-21 实际核对：目录详情页及 `plugins.json` 已收录本插件，记录的 npm/version 均为空；发布的 `index.json` 未包含本插件。上游生成器要求 npm 包、确切版本和发布时间，并跳过 GitHub-only 条目；这是该生成器的限制，不是 Discover 索引格式的通用要求。本包继续仅通过 GitHub 分发并保留 `private: true`。
+- `docs/publishing.md` 的发布示例更新为 1.0.9；按实际证据标记公开提交身份、`dsh-plugin` topic 和市场 PR 合并。只读 GitHub API 确认 PR #8355 于 2026-10-20 17:52:16 UTC 合并，提交前核对的远端 main 为 `6286b60fbced54e6c246b6b0a4be6e88c312c367`（1.0.8）；此为提交前验证快照：当时 1.0.9 补丁未提交、未推送，不将当前工作树标为已发布。旧公开提交元数据未改写。
+- 本次验证：使用本机现有 Node v24.21.0 / pnpm 11.28.5，`python3 -m json.tool package.json` 通过；分别执行 `node --check lib/index.js` 与 `node --check lib/client.js` 通过；`pnpm test` 16/16 通过；三份文档的相对链接与当前版本引用一致性检查通过；`git diff --check` 通过。未安装依赖或修改全局环境。
+- 提交前验证边界：未启动或操作 Harness / UE，未进行全新 profile 安装、真实 UI 新验收、编辑器端只读工具调用或截图验收；未运行本版远端 CI，也未提交、推送、打标签或发布 Release。历史条目保持原样，历史测试不作为本版新结果。
+
 ## 1.0.8 — 2026-10-21
 
 `package.json`：`version: 1.0.8`。本版只调整仓库发布口径，运行时代码、测试、`cordis.patch.yml` 与市场条目均未修改。
