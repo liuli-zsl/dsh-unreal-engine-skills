@@ -86,6 +86,12 @@ The proxy is a stdio MCP server: replace the `unreal-mcp` row's `transport`/`url
 
 The proxy stores catalogs in the operating system's user cache directory. Scope includes configuration path, proxy binary path, engine build identity, and client protocol version. It does not supply a fixed Unreal tool catalog. See the engine's `Extras/Proxy/README.md` for cache behavior and transport limits in your build.
 
+## Multiple editors
+
+Assign each project or engine checkout a fixed editor port, for example `8100` and `8101`. Set `ServerPortNumber` per project (step 2) or launch with `-ModelContextProtocolPort=<port>`. A client configured for an occupied port can reach the first editor even if the second editor failed to start its server.
+
+Each Harness profile has one bundled `unreal-mcp` row. Select the target port on the Plugins page when switching editors. For simultaneous independent sessions, use separate Harness profiles with their own endpoint. When using the optional stdio proxy, point each profile's proxy at its own generated client config. Confirm the responding editor as described in [operations](operations.md#identify-the-editor) before editing assets.
+
 ## Verifying
 
 After the editor is running with the plugin enabled and auto-start on:

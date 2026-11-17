@@ -4,7 +4,7 @@ English | [中文](README.zh.md)
 
 Unofficial [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) port of Epic Games'
 [Unreal Engine Skills for Claude Code](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin)
-(MIT, upstream 3.1.1). One bundle gives an agent three things:
+(MIT, upstream 3.1.2). One bundle gives an agent three things:
 
 - **Three runtime skills.** `unreal-mcp` (discover and call Editor toolsets), `create-toolset`
   (author AI-callable C++/Python toolsets) and `unreal-skill` (author UE Agent Skills inside the
@@ -16,7 +16,9 @@ Unofficial [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) p
   short UE-specific context note is added to the system prompt (the directory is detected by
   walking upward for a `.uproject` or `GenerateProjectFiles.*`).
 
-Current version: **1.0.9**. See [Status and verification boundary](#status-and-verification-boundary)
+Current version: **1.0.10**. The `5.8` maintenance branch follows the UE 5.8 MCP interface. `main` tracks current development and `5.9` tracks the 5.9 line. For a local install targeting UE 5.8, run `git switch 5.8` before installing the checkout.
+
+See [Status and verification boundary](#status-and-verification-boundary)
 for what has and has not been verified.
 
 ## Install
@@ -63,7 +65,7 @@ engine version/branch and Windows/Linux behavior have not yet been recorded as v
    `[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]` in
    `<Project>/Saved/Config/<Platform>Editor/EditorPerProjectUserSettings.ini`, or run
    `ModelContextProtocol.StartServer [port]` in the editor console.
-3. The default port is `8000`.
+3. The default port is `8000`. When running multiple editors, assign a fixed port to each workspace and select the matching endpoint in Harness. See [setup](skills/unreal-mcp/references/setup.md#multiple-editors).
 
 ## Port configuration
 
@@ -109,22 +111,7 @@ full threat model.
 
 ## Status and verification boundary
 
-Version 1.0.9 changes only licensing and release documentation. The existing automated Node tests cover schema validation, preservation of custom MCP settings,
-environment-variable precedence, transport protection, HMR transaction escape, skill registration,
-project context, and the volatile-settings sync path. Browser tests evaluate the actual bundle
-against shared-primitives contract shims; they do not render the real Harness UI.
-
-Earlier releases were checked online against DeepSeek Harness 0.2.1-rc.2: schema visibility, port
-sync, client bundle delivery and slot registration. Those historical results are recorded in
-[CHANGELOG.md](CHANGELOG.md) and are not a fresh acceptance of 1.0.9.
-
-Live verification of 1.0.6 confirmed the form, the invalid-value blocking and the settings write,
-but found that a saved endpoint did not reach the MCP row until a restart; 1.0.7 fixed that and the
-save flow was re-checked live on 2026-10-21: a 9999 → 8000 save updated `unreal-mcp.url` in the same
-process, with no restart and no write loop. Still required for 1.0.9: a clean-profile install and a
-successful read-only tool call against a running editor. The sync depends on DSH internals
-(`configEditor`, the HMR queue, `hmr.executing.exit()`, `loader/volatile-update`); re-check after DSH
-upgrades. Evidence is recorded in [CHANGELOG.md](CHANGELOG.md).
+The UE 5.8 instructions were checked against UE 5.8.4 source. For this version, an end-to-end Harness installation and read-only call against the editor still need verification. The [changelog](CHANGELOG.md) records automated checks and earlier live results.
 
 ## Repository layout
 

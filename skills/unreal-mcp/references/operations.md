@@ -39,6 +39,12 @@ With the optional proxy, the client connects to the proxy instead of directly to
 
 If calls still fail, check the editor's MCP startup log, the configured endpoint, and proxy stderr. With multiple editors, identify which process owns the configured port. A running editor alone does not prove that the proxy targets its MCP server. Follow the recorded endpoint in the `unreal-mcp` row config and the engine's `Extras/Proxy/README.md` for your build's transport limits.
 
+## Identify the editor
+
+Check which project the current session reaches before changing assets. On builds that provide `_meta["com.epicgames.unrealengine/instance"]` in `initialize` or `server/discover`, compare `projectDirectory` and `engineDirectory` with the intended workspace. If the session exposes `execute_python`, `import os; print(os.getpid())` reads its process ID for comparison with the endpoint's `processId`.
+
+On older builds, identify the process listening on the configured port and check its executable and project command line. After switching endpoints, confirm the project or a known level with a read-only tool through the same Harness connection.
+
 ## Troubleshooting matrix
 
 | Symptom                                               | What to do                                                                                                                                                                                                                                                                                                          |

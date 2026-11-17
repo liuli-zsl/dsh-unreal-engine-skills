@@ -4,7 +4,7 @@
 
 `dsh-unreal-engine-skills` is an unofficial port of
 [EpicGames/unreal-engine-skills-for-claude-code-plugin](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin)
-(upstream version 3.1.1) to DeepSeek Harness.
+(upstream version 3.1.2) to DeepSeek Harness.
 
 Adapted material:
 

@@ -18,7 +18,7 @@ submitting the catalog entry; uncommitted local files do not reach GitHub instal
 - [x] Future Git commits use `liuli-zsl` and a GitHub noreply address (local configuration checked); old public commit metadata is unchanged.
 - [ ] Complete the remaining live checks: clean-profile installation and a read-only editor tool call (see [`CHANGELOG.md`](../CHANGELOG.md)).
 - [x] `dsh-plugin` topic on the GitHub repository (required by the list's CI).
-- [ ] Current working tree pushed to GitHub (pre-commit verification snapshot: remote `main` is v1.0.8 / `6286b60`; v1.0.9 is not yet published).
+- [ ] The remote branch points to the reviewed local commit for the intended release.
 - [x] [Listing PR #8355](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/8355) merged on 2026-10-20 at 17:52:16 UTC.
 - [ ] Screenshots added (optional, recommended — see below).
 
@@ -46,19 +46,21 @@ submitting the catalog entry; uncommitted local files do not reach GitHub instal
    ```sh
    git diff --cached --check
    git diff --cached
-   git commit -m "Clarify licensing and marketplace documentation for v1.0.9"
+   git commit -m "<release summary and version>"
    git status --short
    git show HEAD:package.json
    ```
 
    Stop if the working tree still contains intended release changes or `HEAD:package.json` does
-   not say `1.0.9`. Do not tag the old HEAD while the release files remain uncommitted. Resolve
+   not contain the intended package version. Do not tag the old HEAD while the release files remain uncommitted. Resolve
    the privacy decision before pushing; changing future Git identity does not scrub old commits.
 4. The maintainer can then tag and push that reviewed commit (only the intended tag):
 
    ```sh
-   git tag v1.0.9
-   git push origin main v1.0.9
+   version=$(node -p "require('./package.json').version")
+   branch=$(git branch --show-current)
+   git tag "v$version"
+   git push origin "$branch" "v$version"
    ```
 
 5. Check GitHub's actual files and CI results. Create a GitHub Release for the tag with the matching

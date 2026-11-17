@@ -3,7 +3,7 @@
 [English](README.md) | 中文
 
 Epic Games [Unreal Engine Skills for Claude Code](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin)
-插件（MIT，上游 3.1.1）的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
+插件（MIT，上游 3.1.2）的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
 非官方移植版。单个 bundle 同时提供三件事：
 
 - **三个运行时技能。** `unreal-mcp`（发现并调用编辑器工具集）、`create-toolset`（编写可被 AI 调用的
@@ -14,7 +14,9 @@ Epic Games [Unreal Engine Skills for Claude Code](https://github.com/EpicGames/u
 - **UE 工程上下文。** 会话工作目录位于 Unreal 工程内时，向系统提示词注入一段简短的 UE 上下文提示
   （沿目录向上查找 `.uproject` 或 `GenerateProjectFiles.*` 判断）。
 
-当前版本：**1.0.9**。已验证与未验证的范围见[平台与验证边界](#平台与验证边界)。
+当前版本为 **1.0.10**。`5.8` 维护 UE 5.8 的 MCP 接口说明，`main` 跟进最新开发，`5.9` 维护 UE 5.9。本地安装时可先运行 `git switch 5.8` 选定此版本。
+
+已验证与未验证的范围见[平台与验证边界](#平台与验证边界)。
 
 ## 安装
 
@@ -55,7 +57,7 @@ UE5 发行版都支持。实测引擎版本、分支和 Windows/Linux 行为目�
    `<Project>/Saved/Config/<Platform>Editor/EditorPerProjectUserSettings.ini` 的
    `[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]` 下设置
    `bAutoStartServer=True`，或在编辑器控制台执行 `ModelContextProtocol.StartServer [port]`。
-3. 默认端口为 `8000`。
+3. 默认端口为 `8000`。同时运行多个编辑器时，给每个工作区分配固定端口，再在 Harness 中选择相应端点。见[多编辑器配置](skills/unreal-mcp/references/setup.md#multiple-editors)。
 
 ## 端口配置
 
@@ -92,20 +94,7 @@ UE5 发行版都支持。实测引擎版本、分支和 Windows/Linux 行为目�
 
 ## 平台与验证边界
 
-1.0.9 仅调整许可证与发布文档；验证结果和剩余验收项见 [CHANGELOG.md](CHANGELOG.md)。
-
-1.0.9 的 Node 自动测试覆盖 schema 校验、MCP 自定义配置保留、环境变量优先、自定义 transport 保护、
-HMR 事务逃逸、技能注册、项目上下文以及 volatile 设置保存后的同步路径。浏览器侧测试在共享组件契约桩上
-执行真实 bundle，不渲染实际界面。
-
-更早版本在 DeepSeek Harness 0.2.1-rc.2 上做过在线检查，包括 schema 可见、端口同步、客户端 bundle
-服务与槽位注册；历史结果保留在 [CHANGELOG.md](CHANGELOG.md)，不作为 1.0.9 的新验收结果。
-
-1.0.6 的真机验收确认了表单呈现、非法值拦截与设置写入，但发现「保存端点后 `unreal-mcp` 行的 url 要等
-重启才更新」；1.0.7 修复了该缺口，并于 2026-10-21 真机复验：端口 9999 → 8000 保存后同一进程内
-`unreal-mcp.url` 立即更新，无需重启且无循环写入。1.0.9 仍需：全新 profile 安装、以及对运行中编辑器
-成功执行一次只读工具调用。同步依赖 DSH 内部机制（`configEditor`、HMR 队列、`hmr.executing.exit()`、
-`loader/volatile-update`），DSH 升级后需复核。证据记录在 [CHANGELOG.md](CHANGELOG.md)。
+已按 UE 5.8.4 源码核对 5.8 的接入说明。本版仍待全新 Harness profile 安装和编辑器端只读工具实测。自动检查和历史实测记录见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 仓库结构
 
