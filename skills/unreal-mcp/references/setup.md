@@ -4,56 +4,41 @@ Read this for first-time MCP configuration or optional proxy installation. Steps
 
 The goal is three things:
 1. Enable the `ModelContextProtocol` and `AllToolsets` plugins in the project.
-2. Make the editor auto-start the MCP server on launch.
+2. Check the server startup settings for the target engine.
 3. Confirm the Harness `unreal-mcp` connection reaches the editor.
 
-Walk the user through them in order. Do not skip the user's `.uproject` edit silently. Confirm the file path first.
+Check the effective settings first. Confirm the target project before changing its plugin configuration.
 
 ## 1. Enable the plugins in the `.uproject`
 
 First confirm that this engine build contains both plugins; this Harness package does not install
 engine plugins or make an older engine support these APIs.
 
-Two plugins are required. `ModelContextProtocol` is the server and transport; `AllToolsets` provides the tools. With only `ModelContextProtocol` enabled the server starts but exposes no tools.
-
-Open the project's `.uproject` file. In the `Plugins` array, ensure both entries:
+UE 5.8 ships `ModelContextProtocol` disabled by default. UE 5.9 Preview ships it enabled. Check the project's effective plugin settings. Enable `AllToolsets` for the full tool catalog or enable the individual toolset plugins you need. For the full catalog, merge these entries into the project's existing `Plugins` array and preserve other entries:
 
 ```json
 {
-  "Name": "ModelContextProtocol",
-  "Enabled": true
-},
-{
-  "Name": "AllToolsets",
-  "Enabled": true
+  "Plugins": [
+    { "Name": "ModelContextProtocol", "Enabled": true },
+    { "Name": "AllToolsets", "Enabled": true }
+  ]
 }
 ```
 
-If the array doesn't exist, create it. If either entry exists with `"Enabled": false`, flip it to `true`.
-
-`AllToolsets` is an editor-only aggregator with `EnabledByDefault` off, so it must be enabled explicitly. To expose only a subset of tools, enable the specific toolset plugins you want instead of `AllToolsets`.
+Restart the editor if prompted after changing its plugins.
 
 ## 2. Enable auto-start
 
-The default is for the MCP server to stay stopped. To start it manually in a session, run `ModelContextProtocol.StartServer` from the editor console.
+In Editor Preferences, open **Model Context Protocol** and check **Auto Start Server**. UE 5.8 defaults to off. UE 5.9 Preview enables it in the engine's base editor configuration. The project or user can override that value. To start the server for one session, run `ModelContextProtocol.StartServer [port]` in the editor console.
 
-To start it automatically on every editor launch, add the snippet below to the per-user editor config file:
+For a persistent override, use `<Project>/Saved/Config/<Platform>Editor/EditorPerProjectUserSettings.ini`. Choose the section for your engine:
 
-`<Project>/Saved/Config/<Platform>Editor/EditorPerProjectUserSettings.ini`
+| Engine | Section |
+| --- | --- |
+| UE 5.8 | `[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]` |
+| UE 5.9 Preview | `[/Script/ModelContextProtocol.ModelContextProtocolSettings]` |
 
-This is the file the editor writes when you toggle the setting in Editor Preferences. It is per-user and not source-controlled.
-
-```ini
-[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]
-bAutoStartServer=True
-```
-
-Optional overrides if the defaults conflict with another local service:
-
-```ini
-ServerPortNumber=8000
-ServerUrlPath=/mcp
-```
+Under that section, set `bAutoStartServer=True` to enable startup. The default endpoint uses `ServerPortNumber=8000` and `ServerUrlPath=/mcp`. Override the port or path there when needed.
 
 A command-line alternative also works: pass `-ModelContextProtocolStartServer` (and optionally `-ModelContextProtocolPort=<port>`) to the editor. Prefer the `.ini` because it's persistent.
 
@@ -94,10 +79,10 @@ Each Harness profile has one bundled `unreal-mcp` row. Select the target port on
 
 ## Verifying
 
-After the editor is running with the plugin enabled and auto-start on:
+With the editor running and its MCP server started:
 
 - The Output Log shows MCP server startup messages.
-- `mcp__unreal-mcp__list_toolsets` (one of the three tool-search meta-tools) returns successfully.
+- With tool search enabled, `list_toolsets` succeeds, the advertised discovery tool returns a schema, and a read-only `call_tool` operation returns the expected project or level. With tool search disabled, use the advertised read-only tool directly.
 - The Harness plugin inventory lists the `unreal-mcp` connection as healthy.
 
 A connected proxy or visible cached tools do not prove that Unreal is reachable. Confirm with a successful read-only Unreal tool call.

@@ -14,7 +14,7 @@ Epic Games [Unreal Engine Skills for Claude Code](https://github.com/EpicGames/u
 - **UE 工程上下文。** 会话工作目录位于 Unreal 工程内时，向系统提示词注入一段简短的 UE 上下文提示
   （沿目录向上查找 `.uproject` 或 `GenerateProjectFiles.*` 判断）。
 
-当前版本为 **1.0.10**。`5.8` 维护 UE 5.8 的 MCP 接口说明，`main` 跟进最新开发，`5.9` 维护 UE 5.9。本地安装时可先运行 `git switch 5.8` 选定此版本。
+当前版本为 **1.1.0**。`main` 跟进最新开发。需要固定引擎系列时，本地安装前运行 `git switch 5.8` 或 `git switch 5.9`。`5.9` 维护线从 UE 5.9 MegaJam Preview 的接口起步。
 
 已验证与未验证的范围见[平台与验证边界](#平台与验证边界)。
 
@@ -51,12 +51,8 @@ dsh plugin --profile <你的 profile> add github:liuli-zsl/dsh-unreal-engine-ski
 目标引擎必须实际包含 `ModelContextProtocol` 与 `AllToolsets` 插件；本包不会安装它们，也不宣称所有
 UE5 发行版都支持。实测引擎版本、分支和 Windows/Linux 行为目前尚未形成可核对的验证记录。
 
-1. 在工程的 `.uproject` 中启用 `ModelContextProtocol` 与 `AllToolsets` 插件。没有 `AllToolsets` 时
-   服务器会启动，但不提供工具。
-2. 编辑器启动时启动 MCP 服务器：在
-   `<Project>/Saved/Config/<Platform>Editor/EditorPerProjectUserSettings.ini` 的
-   `[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]` 下设置
-   `bAutoStartServer=True`，或在编辑器控制台执行 `ModelContextProtocol.StartServer [port]`。
+1. 确认已启用 Unreal MCP，再启用 All Toolsets 或工程所需的独立工具集插件。编辑器提示重启时按提示操作。
+2. 在编辑器偏好设置的 **Model Context Protocol → Auto Start Server** 中检查自动启动状态。UE 5.8 默认为关，UE 5.9 Preview 的引擎基础配置默认开启。也可在编辑器控制台运行 `ModelContextProtocol.StartServer [port]` 启动当前会话。两个版本各自的 `.ini` 节名见[接入说明](skills/unreal-mcp/references/setup.md)。
 3. 默认端口为 `8000`。同时运行多个编辑器时，给每个工作区分配固定端口，再在 Harness 中选择相应端点。见[多编辑器配置](skills/unreal-mcp/references/setup.md#multiple-editors)。
 
 ## 端口配置
@@ -81,8 +77,7 @@ UE5 发行版都支持。实测引擎版本、分支和 Windows/Linux 行为目�
 
 ## 验证
 
-编辑器运行后，让智能体调用 `mcp__unreal-mcp__list_toolsets`（或“列出当前关卡的所有 Actor”）。
-插件页中 `unreal-mcp` 行应显示运行中，编辑器输出日志应有 MCP 服务器启动信息。
+编辑器运行后，让智能体读取当前关卡。启用工具搜索时，智能体先列出工具集，再用当前编辑器提供的接口读取参数，通过 `call_tool` 执行只读查询。UE 5.8 提供 `describe_toolset`，UE 5.9 Preview 提供 `describe_toolsets` 和 `describe_tools`。最后核对返回的关卡是否属于目标工程。
 
 ## 安全
 
@@ -94,7 +89,7 @@ UE5 发行版都支持。实测引擎版本、分支和 Windows/Linux 行为目�
 
 ## 平台与验证边界
 
-已按 UE 5.8.4 源码核对 5.8 的接入说明。本版仍待全新 Harness profile 安装和编辑器端只读工具实测。自动检查和历史实测记录见 [CHANGELOG.md](CHANGELOG.md)。
+已按 UE 5.8.4 与 UE 5.9 Preview 的源码和基础配置核对工具发现与启动说明。参见 Epic 的 [5.8 MCP 文档](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.8)和 [5.9 MCP 文档](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.9)。本版仍待全新 Harness profile 安装和编辑器端只读工具实测。自动检查和历史实测记录见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 仓库结构
 

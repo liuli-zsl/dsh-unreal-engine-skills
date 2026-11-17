@@ -29,8 +29,9 @@ Work through these questions before writing anything.
 
 **1. Does the skill already exist?** Call `ListSkills` via MCP to see all registered skills in the project, then `GetSkills` on anything relevant. If the capability is already covered, point the user to the existing skill rather than creating a new one.
 
-**2. Choose the implementation path.** Two paths exist and the choice depends on where the skill lives:
+**2. Choose the implementation path.** Choose a format supported by the target engine and the project:
 
+- **Markdown (UE 5.9 Preview)**: For a source-controlled workflow, place `SKILL.md` under `<Project>/Skills/<folder>/` or `<EnabledPlugin>/Skills/<folder>/`. Include `name` and `description` in YAML frontmatter and put the instructions in the body. Look up the registered path with `ListSkills` and read it with `GetSkills`.
 - **Python class**: The right choice when the skill is part of a code plugin. It lives alongside the plugin's Python toolsets, is version-controlled with the plugin, and is registered automatically when the plugin loads.
 - **UAsset**: The right choice when the skill is project-specific and doesn't belong in a plugin. Create it directly in the Content Browser using `CreateSkill` via MCP. No code required.
 
@@ -42,7 +43,7 @@ Every Unreal skill has two fields.
 
 **Instructions**: The skill's payload. The actual guidance the agent follows when the skill is active. Apply the principles above: focus on what tools can't teach and cut anything not essential.
 
-The agent discovers and dispatches tools at runtime through the unreal-mcp meta-tools (`list_toolsets`, `describe_toolset`, `call_tool`), so write instructions that assume the agent will find the tools it needs rather than naming a fixed toolset list.
+The agent discovers and dispatches tools at runtime using the discovery workflow in the `unreal-mcp` skill, so write instructions that assume the agent will find the tools it needs rather than naming a fixed toolset list.
 
 ## Python Skills
 

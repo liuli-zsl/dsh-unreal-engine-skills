@@ -23,7 +23,7 @@ A good toolset is:
 
 Work through these questions in order before touching any code.
 
-**1. Does the functionality already exist?** If the editor is running, call `mcp__unreal-mcp__list_toolsets`, then `mcp__unreal-mcp__describe_toolset` on anything relevant. If MCP isn't available, search the codebase for folders named `Toolsets` and read the C++ headers or Python toolset files there. If the capability is already exposed, there's nothing to do. Tell the user and point them to the right tool.
+**1. Does the functionality already exist?** If the editor is running, follow the discovery workflow in the `unreal-mcp` skill to read the current schema of any relevant tool. If MCP isn't available, search the codebase for folders named `Toolsets` and read the C++ headers or Python toolset files there. If the capability is already exposed, there's nothing to do. Tell the user and point them to the right tool.
 
 **2. Is the request more general than it sounds?** Users often ask for something domain-specific that is actually an instance of a broader pattern. Before looking for a domain toolset, ask whether the capability truly belongs to that domain or whether it applies more widely. For example, a request for "read blueprint asset metadata" sounds like it belongs in `BlueprintTools`, but metadata applies to all assets, so the right place is `AssetTools`. Solving it generically is almost always better than solving it narrowly.
 
@@ -79,6 +79,8 @@ Keep what can't be inferred: units, ranges, non-obvious encodings (e.g. "a singl
 ```
 
 **Structs**: Document the struct itself (what it represents and when it's used) and every field (meaning and units where applicable). UPROPERTY metadata such as `ClampMin` and `ClampMax` is extracted automatically and included in the schema. Use it rather than restating constraints in the doc comment.
+
+On UE 5.9 Preview, declare the access mode appropriate for each tool. For example, a read-only query uses `AIAccessMode = "Read"` alongside `AICallable` in C++, or `@toolset_registry.tool_call(mode=unreal.ToolAccessMode.READ)` in Python. Check the target engine before using access-mode metadata on older releases.
 
 ## C++ Specifics
 

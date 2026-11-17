@@ -11,15 +11,17 @@ You don't need to memorize tool names. The flow below has you discover them on d
 
 In DeepSeek Harness the connection is configured by the `dsh-unreal-engine-skills` plugin (default `http://127.0.0.1:8000/mcp`), and every server tool appears with the `mcp__unreal-mcp__` prefix. The connection can appear as a proxy when the engine's optional proxy is installed; see `references/setup.md` for installation.
 
-## First step every time: discover the tool you need, then dispatch it via `call_tool`
+## Discover and call a tool
 
-Tool search is on by default, so the MCP server advertises only three meta-tools for the whole session: `mcp__unreal-mcp__list_toolsets`, `mcp__unreal-mcp__describe_toolset`, and `mcp__unreal-mcp__call_tool`. Tool names like `BlueprintTools.create` or `SequencerTools.create_level_sequence` are **not registered as standalone tools**. They are dispatched server-side through `call_tool` and never appear in the tool registry. This is deliberate. It keeps your context window small and the prompt cache warm.
+Inspect the tools advertised by the current Harness connection. The names below omit the `mcp__unreal-mcp__` prefix. In tool-search mode, call `list_toolsets` to find the registered toolset name. Use the discovery tool that this connection offers:
 
-When you start work:
+| Advertised tool | How to read a schema |
+| --- | --- |
+| `describe_toolset` (UE 5.8) | Pass `toolset_name` as one registered name. The response includes the tool schemas. |
+| `describe_toolsets` (UE 5.9 Preview) | Pass `toolset_names` as an array of registered names. Set `include_schemas: true` when you need parameter types. |
+| `describe_tools` (UE 5.9 Preview) | For specific tools, pass `tool_names` as an array of fully qualified names, e.g. `ToolsetRegistry.AgentSkillToolset.ListSkills` if advertised. |
 
-1. Call `mcp__unreal-mcp__list_toolsets` to see what's registered, then `mcp__unreal-mcp__describe_toolset` on the candidate(s) to read their tool schemas. If you already know which toolset you need (the user said "make a Blueprint" → the Blueprint toolset), skip the listing and go straight to `describe_toolset` to confirm the available tools and their signatures.
-2. Invoke the tool with `mcp__unreal-mcp__call_tool`: pass `toolset_name`, `tool_name`, and an `arguments` object matching the schema you just read. `toolset_name` must be the registered toolset name **exactly as `list_toolsets` printed it** (e.g. `ToolsetRegistry.AgentSkillToolset`, `editor_toolset.toolsets.scene.SceneTools`) — the short class name alone (e.g. `AgentSkillToolset`) is rejected with "Toolset not found". `tool_name` is the short tool name from `describe_toolset` (e.g. `ListSkills`, `get_current_level`); the fully-qualified name is rejected with "Tool not found". So the example `AgentSkillToolset.ListSkills` below means `toolset_name: "ToolsetRegistry.AgentSkillToolset"`, `tool_name: "ListSkills"`. The result comes back on the same turn. No extra round-trip needed.
-3. Top-level dispatch (omitting `toolset_name`) is reserved for tools registered directly on the MCP server and is rejected for `call_tool` itself.
+Then invoke `call_tool` with the exact registered `toolset_name`, the short `tool_name` and an `arguments` object matching the schema. For example, if listed, call `ToolsetRegistry.AgentSkillToolset` / `ListSkills` with `{}`. Omit the toolset name only for top-level tools. Recursive dispatch of `call_tool` is rejected. If the server exposes domain tools directly (tool search disabled), use their advertised handles and input schemas.
 
 Missing tools do not prove that the editor is stopped. Check the `unreal-mcp` connection in the Harness plugin inventory and follow `references/operations.md`. A proxy can stay connected while Unreal is unavailable, and a client can keep a stale catalog after recovery. `unreal_mcp_status` reports the proxy's session state, not current reachability. Verify recovery with a read-only Unreal tool call. For first-time configuration, follow `references/setup.md`.
 
@@ -39,7 +41,7 @@ A project or plugin can register **Agent Skills**: named bundles of instructions
 
 Check for them the same way you discover tools, and do it whenever you start unfamiliar work in a project rather than just once:
 
-1. Call `AgentSkillToolset.ListSkills` (through `mcp__unreal-mcp__call_tool`) to see what skills the project registers. Each entry carries a short description of what it covers and when it applies.
+1. Call `AgentSkillToolset.ListSkills` using the dispatch mode above to see what skills the project registers. Each entry carries a short description of what it covers and when it applies.
 2. If a skill's description looks relevant to what the user asked, call `AgentSkillToolset.GetSkills` on it to load the full instructions, then follow them.
 3. If nothing matches, fall back to the tool-discovery flow above.
 

@@ -16,7 +16,7 @@ Unofficial [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) p
   short UE-specific context note is added to the system prompt (the directory is detected by
   walking upward for a `.uproject` or `GenerateProjectFiles.*`).
 
-Current version: **1.0.10**. The `5.8` maintenance branch follows the UE 5.8 MCP interface. `main` tracks current development and `5.9` tracks the 5.9 line. For a local install targeting UE 5.8, run `git switch 5.8` before installing the checkout.
+Current version: **1.1.0**. Use `main` for the latest development. To pin a local checkout to an engine line, run `git switch 5.8` or `git switch 5.9` before installing it. The `5.9` maintenance line starts from the UE 5.9 MegaJam Preview interface.
 
 See [Status and verification boundary](#status-and-verification-boundary)
 for what has and has not been verified.
@@ -59,12 +59,8 @@ Your engine build must actually contain the `ModelContextProtocol` and `AllTools
 This package does not install them, and does not claim support for every UE5 release. The exact
 engine version/branch and Windows/Linux behavior have not yet been recorded as verified.
 
-1. Enable the `ModelContextProtocol` and `AllToolsets` plugins in the project's `.uproject`.
-   Without `AllToolsets` the server starts but exposes no tools.
-2. Start the MCP server when the editor runs: either set `bAutoStartServer=True` under
-   `[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]` in
-   `<Project>/Saved/Config/<Platform>Editor/EditorPerProjectUserSettings.ini`, or run
-   `ModelContextProtocol.StartServer [port]` in the editor console.
+1. Check that Unreal MCP is enabled and enable All Toolsets (or the individual toolset plugins you need). Restart the editor if prompted.
+2. In Editor Preferences, check **Model Context Protocol → Auto Start Server**. Stock UE 5.8 defaults to off. The UE 5.9 Preview base configuration enables it. To start it for this session, run `ModelContextProtocol.StartServer [port]` in the editor console. The [setup guide](skills/unreal-mcp/references/setup.md) lists the `.ini` section for each version.
 3. The default port is `8000`. When running multiple editors, assign a fixed port to each workspace and select the matching endpoint in Harness. See [setup](skills/unreal-mcp/references/setup.md#multiple-editors).
 
 ## Port configuration
@@ -96,9 +92,7 @@ engine version/branch and Windows/Linux behavior have not yet been recorded as v
 
 ## Verify
 
-With the editor running, ask the agent to call `mcp__unreal-mcp__list_toolsets` (or "list all actors
-in the current level"). On the Plugins page the `unreal-mcp` row should be running, and the editor
-output log should show the MCP server startup message.
+With the editor running, ask the agent to read the current level. With tool search enabled it lists toolsets, reads the tool schema using the discovery tools advertised by the editor, and invokes the read-only tool through `call_tool`. UE 5.8 provides `describe_toolset`. UE 5.9 Preview provides `describe_toolsets` and `describe_tools`. Confirm the level belongs to the intended project.
 
 ## Security
 
@@ -111,7 +105,7 @@ full threat model.
 
 ## Status and verification boundary
 
-The UE 5.8 instructions were checked against UE 5.8.4 source. For this version, an end-to-end Harness installation and read-only call against the editor still need verification. The [changelog](CHANGELOG.md) records automated checks and earlier live results.
+The discovery and configuration instructions were checked against UE 5.8.4 and UE 5.9 Preview source and base configuration. See Epic’s [5.8 MCP reference](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.8) and [5.9 MCP reference](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.9). For this version, an end-to-end Harness installation and read-only call against the editor still need verification. The [changelog](CHANGELOG.md) records automated checks and earlier live results.
 
 ## Repository layout
 
