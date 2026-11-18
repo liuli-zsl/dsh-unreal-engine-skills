@@ -22,6 +22,12 @@
 3. 按影响更新专题文档：端口/连接配置改动查 `skills/unreal-mcp/references/setup.md` 与 `README.md` 的 Port configuration 节 / `README.zh.md` 的「端口配置」节；技能内容改动查对应 `skills/*/SKILL.md`；协作流程或源码导航变化时也更新本文件。无需改写不受影响的文档。
 4. 同一项修改之后补充运行实测结果时，只补记到该版本的 `CHANGELOG.md` 和必要的说明文档，不再次递增版本。明确区分静态检查（`node --check`、schema 探针）、在线实测（Config 检查器、补丁观察、槽位检查、combo 路由探测）与用户界面确认，不能沿用旧版结果作为新版验证。
 
+## dshmarket 上架与更新确认
+
+- 每次完成一项插件修改，在汇报验证结果时询问用户：「是否将本次修改（分支 `<branch>`，插件版本 `<version>`）更新到 `dshmarket`？」一次需求统一询问一次。用户已在当前任务明确要求发布或暂缓时，按该决定执行。
+- 用户确认后，按 `docs/publishing.md` 核对市场条目的安装来源。本插件的 GitHub 来源跟随默认分支 `main`；发布前明确将进入该分支的改动。只有目录描述、分类或安装来源变化时才需要修改已有目录条目。
+- 发布后从公开目录读取安装目标，核对它解析到的提交和 `package.json` 版本，并向用户报告结果。若更新仍在等待索引刷新或 PR 审核，说明当前实际进度。
+
 ## 修改约定
 
 - 围绕请求做最小必要修改，保留工作副本中已有改动。不要顺手改用户 profile（`~/.dsh/profiles/*/cordis.patch.yml` 等）、DSH 安装目录或引擎内容；确需跨目录修改时说明原因和影响。
@@ -36,4 +42,4 @@
 
 - 可先做限定范围的静态检查与在线探针，并明确它们不能代替用户界面与编辑器端的完整验证：分别执行 `node --check lib/index.js` 与 `node --check lib/client.js`；`pnpm test` 使用 Node 内置测试运行器，不触发编译；用 Node 导入模块并以 `Config["~standard"].validate(...)` 校验 schema 行为。`test/` 验证配置与模拟服务契约，真实 UI、持久化及编辑器调用另行验收；CI 定义在 `.github/workflows/check.yml`。
 - 在线实测手段（只读）：`cordis_inspect_query` 的 Config 检查器看行 schema；观察 profile 补丁文件是否被同步写入；探测 `/plugins/??dsh-unreal-engine-skills/client.js&rev=<文件元数据 sha1 前 12 位>` 是否 200；客户端 Slots 检查器看 `plugins.bundle.config` / `plugins.row.config` 的 occupant。写操作（改补丁、`plugin_manager` 启停、`configEditor.edit`）会改变运行状态，按当前用户授权范围执行。
-- 表单视觉呈现、从界面点击「保存」的完整链路、编辑器端 MCP 工具真实调用无法从本仓库侧确认，交付时如实说明，由用户在 Harness 中最终确认；历史测试结果不能充当本次结果。不要替用户提交仓库，也不要提交用户 profile 或 `node_modules` 内容。
+- 表单视觉呈现、从界面点击「保存」的完整链路、编辑器端 MCP 工具真实调用无法从本仓库侧确认，交付时如实说明，由用户在 Harness 中最终确认；历史测试结果不能充当本次结果。Git 提交、推送按用户明确授权的范围执行，发布只包含本次确认的仓库文件。不要提交用户 profile 或 `node_modules` 内容。

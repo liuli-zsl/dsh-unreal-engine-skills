@@ -16,7 +16,7 @@ Unofficial [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) p
   short UE-specific context note is added to the system prompt (the directory is detected by
   walking upward for a `.uproject` or `GenerateProjectFiles.*`).
 
-Current version: **1.1.0**. Use `main` for the latest development. To pin a local checkout to an engine line, run `git switch 5.8` or `git switch 5.9` before installing it. The `5.9` maintenance line starts from the UE 5.9 MegaJam Preview interface.
+Current version: **1.1.1**. Use `main` for the latest development. To pin a local checkout to an engine line, run `git switch 5.8` or `git switch 5.9` before installing it. The `5.9` maintenance line starts from the UE 5.9 MegaJam Preview interface.
 
 See [Status and verification boundary](#status-and-verification-boundary)
 for what has and has not been verified.
@@ -41,7 +41,7 @@ The bundle patch adds two loader rows: `unreal-engine-skills` (this package) and
 
 ### From the plugin market
 
-This plugin is [listed in the community catalog](https://awesome-dsh-plugin.com/p/liuli-zsl/dsh-unreal-engine-skills/) used by `dshmarket`; [market PR #8355](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/8355) merged on 2026-10-20 (UTC).
+Open **Discover** in `dshmarket` and search for `dsh-unreal-engine-skills` by `liuli-zsl`. The market installs `github:liuli-zsl/dsh-unreal-engine-skills` from the default branch. Existing GitHub installs can check for updates in the market. [Catalog entry](https://awesome-dsh-plugin.com/p/liuli-zsl/dsh-unreal-engine-skills/)
 
 The catalog's npm-version index for Harness 0.2.1+ **Plugins → Discover** is narrower than its full GitHub catalog: its generator requires an npm package, an exact version and its publish time. This plugin's catalog record has no npm package or version, and it is absent from that index as checked on 2026-10-21. It remains GitHub-only with `private: true`. This is a limit of that catalog's generator, not a requirement of every Discover index. See [`docs/publishing.md`](docs/publishing.md).
 

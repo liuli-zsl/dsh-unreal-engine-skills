@@ -126,11 +126,13 @@ On 2026-10-21, the [full catalog](https://awesome-dsh-plugin.com/plugins.json) i
    a maintainer then reads the repository and verifies the description against the code. Listings
    usually go live within about a day after merge.
 
-### Updating the listing later
+### Updating an existing dshmarket installation
 
-Edit only your own `data/plugins/liuli-zsl__dsh-unreal-engine-skills.yml` in the list repository and
-open a PR; regenerating the READMEs is done by the list's CI. Do not hand-write an `npm:` key — the
-npm mapping is picked up automatically from `package.json`'s `repository` field.
+1. After each plugin change, ask the maintainer whether to publish the tested branch and version. An explicit release request for the current change supplies that approval.
+2. Find this repository in the [public catalog](https://awesome-dsh-plugin.com/plugins.json) and read its `install` field. The current target, `github:liuli-zsl/dsh-unreal-engine-skills`, follows the repository's default branch. For a version update, push the approved release commit to `main`. The market checks the upstream package version for this GitHub source.
+3. Verify the commit advertised by the install target with `git ls-remote --symref origin HEAD` and read `package.json` at that exact public commit. Check that the previous GitHub-installed version is offered the update and that the new version is reported current. A local `link:` checkout uses the files on disk.
+
+For changes to the listing's description, category or install source, update the existing `data/plugins/liuli-zsl__dsh-unreal-engine-skills.yml` through a PR in the catalog repository. Verify the generated catalog after merge.
 
 ## Screenshots (optional, recommended)
 

@@ -14,7 +14,7 @@ Epic Games [Unreal Engine Skills for Claude Code](https://github.com/EpicGames/u
 - **UE 工程上下文。** 会话工作目录位于 Unreal 工程内时，向系统提示词注入一段简短的 UE 上下文提示
   （沿目录向上查找 `.uproject` 或 `GenerateProjectFiles.*` 判断）。
 
-当前版本为 **1.1.0**。`main` 跟进最新开发。需要固定引擎系列时，本地安装前运行 `git switch 5.8` 或 `git switch 5.9`。`5.9` 维护线从 UE 5.9 MegaJam Preview 的接口起步。
+当前版本为 **1.1.1**。`main` 跟进最新开发。需要固定引擎系列时，本地安装前运行 `git switch 5.8` 或 `git switch 5.9`。`5.9` 维护线从 UE 5.9 MegaJam Preview 的接口起步。
 
 已验证与未验证的范围见[平台与验证边界](#平台与验证边界)。
 
@@ -35,7 +35,7 @@ dsh plugin --profile <你的 profile> add github:liuli-zsl/dsh-unreal-engine-ski
 
 ### 从插件市场安装
 
-本插件已被 `dshmarket` 使用的社区目录[收录](https://awesome-dsh-plugin.com/p/liuli-zsl/dsh-unreal-engine-skills/)，[市场 PR #8355](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/8355) 于 2026-10-20（UTC）合并。
+在 `dshmarket` 的「发现」中搜索 `dsh-unreal-engine-skills`，选择作者为 `liuli-zsl` 的条目。市场通过 `github:liuli-zsl/dsh-unreal-engine-skills` 从默认分支安装。已从该来源安装的用户可在市场内检查更新。[市场条目](https://awesome-dsh-plugin.com/p/liuli-zsl/dsh-unreal-engine-skills/)
 
 该社区目录供 Harness 0.2.1+ **插件 → 发现**使用的 npm 版本索引，覆盖范围小于完整 GitHub 目录：其生成器要求 npm 包、确切版本和发布时间。2026-10-21 核对时，本插件目录记录中的 npm 包和版本为空，未出现在该索引；本包继续仅通过 GitHub 分发并保留 `private: true`。这是该目录生成器的限制，不是所有 Discover 索引的通用要求。详见 [`docs/publishing.md`](docs/publishing.md)。
 
