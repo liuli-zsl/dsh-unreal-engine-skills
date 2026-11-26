@@ -2,42 +2,32 @@
 
 [English](README.md) | 中文
 
-Epic Games [Unreal Engine Skills for Claude Code](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin)
-插件（MIT，上游 3.1.2）的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
-非官方移植版。单个 bundle 同时提供三件事：
-
-- **三个运行时技能。** `unreal-mcp`（发现并调用编辑器工具集）、`create-toolset`（编写可被 AI 调用的
-  C++/Python 工具集）、`unreal-skill`（在编辑器内编写 UE Agent Skill），由 [`skills/`](skills/) 注册。
-- **Unreal MCP 连接。** 一条 `unreal-mcp` 行通过 `@deepseek-ai/dsh-mcp-client` 连接编辑器的
-  `ModelContextProtocol` 服务器（默认 `http://127.0.0.1:8000/mcp`）。端口与 URL 路径可在 Harness
-  插件页直接修改，保存即生效，无需重启。
-- **UE 工程上下文。** 会话工作目录位于 Unreal 工程内时，向系统提示词注入一段简短的 UE 上下文提示
-  （沿目录向上查找 `.uproject` 或 `GenerateProjectFiles.*` 判断）。
-
-当前版本为 **1.1.1**。`main` 跟进最新开发。需要固定引擎系列时，本地安装前运行 `git switch 5.8` 或 `git switch 5.9`。`5.9` 维护线从 UE 5.9 MegaJam Preview 的接口起步。
-
-已验证与未验证的范围见[平台与验证边界](#平台与验证边界)。
+用 DeepSeek Harness 连接 Unreal Editor，读取当前关卡，或通过编辑器工具集操作 Actor 和资产。
+插件当前版本为 **1.1.2**，由 Epic Games 的 Unreal Engine Skills for Claude Code 3.1.2（MIT）非官方移植而来。
+[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) · [Epic 上游插件](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin)
 
 ## 安装
 
-要求 DeepSeek Harness `>=0.2.0-rc.2 <0.3.0`（[`package.json`](package.json) 的 `engines.dsh`）。
+需要 DeepSeek Harness `>=0.2.0-rc.2 <0.3.0`，以及包含 Unreal MCP 和所需工具集的编辑器。[包清单](package.json) · [已核对的引擎版本](#平台与验证边界)
+
+### 从插件市场安装
+
+1. 在 `dshmarket` 的「发现」中搜索 `dsh-unreal-engine-skills`，安装作者为 `liuli-zsl` 的条目。市场从公开的 `main` 分支安装。[市场条目](https://awesome-dsh-plugin.com/p/liuli-zsl/dsh-unreal-engine-skills/)
+2. 打开目标 Unreal 工程，启用 Unreal MCP 和 All Toolsets（或所需的独立工具集），按提示重启编辑器。如果 MCP 服务尚未启动，在编辑器控制台运行 `ModelContextProtocol.StartServer`。[编辑器侧配置](#编辑器侧配置每个工程一次)
+3. 在 Harness 中输入 **“用 Unreal MCP 读取当前打开的关卡名。”** 将返回的名称与目标编辑器中打开的关卡核对。[连接验证](#验证)
+
+通过 GitHub 来源安装的用户可在 `dshmarket` 检查更新。遇到安装或连接问题，可在仓库向维护者 `liuli-zsl` 反馈。[GitHub Issues](https://github.com/liuli-zsl/dsh-unreal-engine-skills/issues)
 
 ### 从 GitHub 安装
 
 ```sh
-dsh plugin --profile <你的 profile> add github:liuli-zsl/dsh-unreal-engine-skills
+dsh plugin --profile web add github:liuli-zsl/dsh-unreal-engine-skills
 ```
 
-使用 `dsh web` 时填写 `web`。官方桌面端优先从应用内的**插件**页填写 GitHub 来源安装。
+以上命令用于 `dsh web`。官方桌面端优先从应用内的**插件**页填写 GitHub 来源安装。
 命令行管理 `desktop` 需要使用 Desktop 安装的命令，先初始化 profile 并完全退出应用；npm 安装的 CLI
 不能管理该 profile。参见[官方 CLI 说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/README.md)。bundle 补丁会插入
 `unreal-engine-skills`（本包）与 `unreal-mcp`（`@deepseek-ai/dsh-mcp-client`）两行。
-
-### 从插件市场安装
-
-在 `dshmarket` 的「发现」中搜索 `dsh-unreal-engine-skills`，选择作者为 `liuli-zsl` 的条目。市场通过 `github:liuli-zsl/dsh-unreal-engine-skills` 从默认分支安装。已从该来源安装的用户可在市场内检查更新。[市场条目](https://awesome-dsh-plugin.com/p/liuli-zsl/dsh-unreal-engine-skills/)
-
-该社区目录供 Harness 0.2.1+ **插件 → 发现**使用的 npm 版本索引，覆盖范围小于完整 GitHub 目录：其生成器要求 npm 包、确切版本和发布时间。2026-10-21 核对时，本插件目录记录中的 npm 包和版本为空，未出现在该索引；本包继续仅通过 GitHub 分发并保留 `private: true`。这是该目录生成器的限制，不是所有 Discover 索引的通用要求。详见 [`docs/publishing.md`](docs/publishing.md)。
 
 ### 从本地目录安装（开发）
 
@@ -48,8 +38,7 @@ dsh plugin --profile <你的 profile> add github:liuli-zsl/dsh-unreal-engine-ski
 
 ## 编辑器侧配置（每个工程一次）
 
-目标引擎必须实际包含 `ModelContextProtocol` 与 `AllToolsets` 插件；本包不会安装它们，也不宣称所有
-UE5 发行版都支持。实测引擎版本、分支和 Windows/Linux 行为目前尚未形成可核对的验证记录。
+引擎提供 `ModelContextProtocol` 插件及编辑器工具集，本插件负责让 Harness 连接该服务。
 
 1. 确认已启用 Unreal MCP，再启用 All Toolsets 或工程所需的独立工具集插件。编辑器提示重启时按提示操作。
 2. 在编辑器偏好设置的 **Model Context Protocol → Auto Start Server** 中检查自动启动状态。UE 5.8 默认为关，UE 5.9 Preview 的引擎基础配置默认开启。也可在编辑器控制台运行 `ModelContextProtocol.StartServer [port]` 启动当前会话。两个版本各自的 `.ini` 节名见[接入说明](skills/unreal-mcp/references/setup.md)。
@@ -79,6 +68,12 @@ UE5 发行版都支持。实测引擎版本、分支和 Windows/Linux 行为目�
 
 编辑器运行后，让智能体读取当前关卡。启用工具搜索时，智能体先列出工具集，再用当前编辑器提供的接口读取参数，通过 `call_tool` 执行只读查询。UE 5.8 提供 `describe_toolset`，UE 5.9 Preview 提供 `describe_toolsets` 和 `describe_tools`。最后核对返回的关卡是否属于目标工程。
 
+## 插件功能
+
+- **三个运行时技能。** `unreal-mcp` 发现并调用编辑器工具集，`create-toolset` 辅助编写可被 AI 调用的 C++ 或 Python 工具集，`unreal-skill` 辅助在编辑器中编写 UE Agent Skill。[技能目录](skills/)
+- **Unreal MCP 连接。** `unreal-mcp` 行通过 `@deepseek-ai/dsh-mcp-client` 连接编辑器，默认端点为 `http://127.0.0.1:8000/mcp`。可以在 Harness 插件页修改端口与 URL 路径。[端口配置](#端口配置)
+- **UE 工程上下文。** 插件从会话工作目录向上查找 `.uproject` 或 `GenerateProjectFiles.*`，识别到 Unreal 工程时向系统提示词加入 UE 上下文提示。
+
 ## 安全
 
 本 bundle 给智能体对运行中编辑器的广泛实时访问，包括 `ProgrammaticToolset.execute_tool_script`
@@ -89,7 +84,7 @@ UE5 发行版都支持。实测引擎版本、分支和 Windows/Linux 行为目�
 
 ## 平台与验证边界
 
-已按 UE 5.8.4 与 UE 5.9 Preview 的源码和基础配置核对工具发现与启动说明。参见 Epic 的 [5.8 MCP 文档](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.8)和 [5.9 MCP 文档](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.9)。本版仍待全新 Harness profile 安装和编辑器端只读工具实测。自动检查和历史实测记录见 [CHANGELOG.md](CHANGELOG.md)。
+已按 UE 5.8.4 与 UE 5.9 Preview 的源码和基础配置核对工具发现与启动说明。本版仍待全新 Harness profile 安装和编辑器端只读调用实测。[UE 5.8 MCP 文档](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.8) · [UE 5.9 MCP 文档](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.9) · [验证记录](Docs/CHANGELOG.md)
 
 ## 仓库结构
 
@@ -101,7 +96,7 @@ UE5 发行版都支持。实测引擎版本、分支和 Windows/Linux 行为目�
 | [`lib/client.js`](lib/client.js) | 浏览器半：手写的 `__ModuleLoader__.load` bundle（无构建步骤），渲染 bundle 页端口表单与 `unreal-mcp` 行的“配置”入口。 |
 | [`skills/`](skills/) | 三个技能的 `SKILL.md` 与 `unreal-mcp` 的参考文档（`setup.md`、`operations.md`）。 |
 | `locale/` | 插件本地化字典。 |
-| [`docs/publishing.md`](docs/publishing.md) | 发布、npm 与插件市场上架步骤。 |
+| [`Docs/publishing.md`](Docs/publishing.md) | 发布、npm 与插件市场上架步骤。 |
 | [`LICENSE`](LICENSE)、[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) | 许可证与上游署名。 |
 
 ## 相关项目
@@ -114,8 +109,9 @@ UE5 发行版都支持。实测引擎版本、分支和 Windows/Linux 行为目�
 
 ## 开发
 
-仓库没有构建步骤。版本递增、文档同步与验证范围的约定见 [AGENTS.md](AGENTS.md)，变更记录见
-[CHANGELOG.md](CHANGELOG.md)，发布与上架步骤见 [`docs/publishing.md`](docs/publishing.md)。
+公开安装使用 `main`。维护者的本地工作副本另有 `5.8` 与 `5.9` 分支。工作副本已包含这些分支时，可用 `git switch 5.8` 或 `git switch 5.9` 切换到对应引擎系列后验证改动。`5.9` 维护线从 UE 5.9 MegaJam Preview 的接口起步。
+
+本插件直接以 JavaScript 分发。[仓库协作约定](AGENTS.md) · [变更记录](Docs/CHANGELOG.md) · [发布说明](Docs/publishing.md)
 
 先执行 `pnpm install --frozen-lockfile --ignore-scripts`，再执行 `pnpm test`。测试使用 Node 内置运行器，
 不会触发编译。CI 定义为在 Node 22、24 上运行相同检查；推送后仍需确认远端 CI 的实际结果。

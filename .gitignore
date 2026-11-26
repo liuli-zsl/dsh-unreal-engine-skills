@@ -13,4 +13,7 @@ logs/
 *.tmp
 
 # 内部交叉审查报告：保留在本地，不随仓库发布（证据已记入 CHANGELOG）
-docs/cross-review-*.zh.md
+/[Dd]ocs/cross-review-*.zh.md
+
+# 本地任务计划与进度
+/Docs/Plan/

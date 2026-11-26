@@ -1,33 +1,30 @@
 # Publishing and marketplace
 
-This repository is distributed from GitHub. npm is optional. The canonical repository URL is
-
-```text
-https://github.com/liuli-zsl/dsh-unreal-engine-skills
-```
+The `dshmarket` listing installs from the public `main` branch. GitHub Releases identify tagged snapshots.
+On 2026-11-26, the market's install source served **1.1.1** and GitHub marked **v1.0.9** as Latest.
+[Public package manifest](https://github.com/liuli-zsl/dsh-unreal-engine-skills/blob/main/package.json) · [GitHub Releases](https://github.com/liuli-zsl/dsh-unreal-engine-skills/releases)
 
 ## Pre-flight checklist
 
-The first four checks describe the local source tree. Verify the actual remote release before
-submitting the catalog entry; uncommitted local files do not reach GitHub installs.
+Check the candidate commit locally. After publishing, read the version and commit back from the selected channel.
 
 - [x] `dsh.bundle` manifest and `cordis.patch.yml` at the repository root (required for `dsh plugin add`).
 - [x] MIT license plus upstream Epic Games notice ([`LICENSE`](../LICENSE), [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md)).
 - [x] Public repository (`liuli-zsl/dsh-unreal-engine-skills`).
 - [x] Public-facing README in English and Chinese ([`README.md`](../README.md), [`README.zh.md`](../README.zh.md)).
-- [x] Future Git commits use `liuli-zsl` and a GitHub noreply address (local configuration checked); old public commit metadata is unchanged.
-- [ ] Complete the remaining live checks: clean-profile installation and a read-only editor tool call (see [`CHANGELOG.md`](../CHANGELOG.md)).
+- [ ] Before committing, check the effective author and committer with `git var GIT_AUTHOR_IDENT` and `git var GIT_COMMITTER_IDENT`. Both should use `liuli-zsl` and the maintainer's verified GitHub noreply address. Apply any identity override to this repository or commit and verify the resulting commit before publishing.
+- [ ] Record the tested Harness and UE versions when a clean-profile installation and a read-only editor call have been verified. [Verification history](CHANGELOG.md)
 - [x] `dsh-plugin` topic on the GitHub repository (required by the list's CI).
-- [ ] The remote branch points to the reviewed local commit for the intended release.
+- [ ] For a market update, confirm that the default branch points to the approved commit. For a GitHub Release, confirm that its tag resolves to the approved commit.
 - [x] [Listing PR #8355](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/8355) merged on 2026-10-20 at 17:52:16 UTC.
 - [ ] Screenshots added (optional, recommended — see below).
 
 ## Releasing
 
-1. Bump `version` in [`package.json`](../package.json) (patch by default) and update
-   [`README.md`](../README.md), [`README.zh.md`](../README.zh.md) and [`CHANGELOG.md`](../CHANGELOG.md)
-   as described in [`AGENTS.md`](../AGENTS.md).
-2. Run the checks without compiling anything:
+### Prepare a local commit
+
+1. For each change, increment `version` in `package.json` once, update both READMEs and record the change and its verification in the same commit. [Repository conventions](../AGENTS.md) · [Changelog](CHANGELOG.md)
+2. Run the repository checks.
 
    ```sh
    pnpm install --frozen-lockfile --ignore-scripts
@@ -37,34 +34,25 @@ submitting the catalog entry; uncommitted local files do not reach GitHub instal
    git diff --check
    ```
 
-   `cordis.patch.yml` uses the Harness loader's `!!js` tag. A generic YAML parser cannot validate
-   that expression's runtime behavior; a tag error is not a passing configuration check.
-3. Review and commit the intended files. Check `git status --short` and the full diff, select the
-   source, tests, workflow, manifests, license files and documentation explicitly with `git add`,
-   then inspect the staged diff:
+   `cordis.patch.yml` uses the Harness loader's `!!js` tag. Runtime verification of that expression requires the Harness loader.
+3. Review `git status --short` and the diff. Stage only the intended files or hunks, inspect the staged diff, then commit locally. Write the title in Chinese followed by English, separated by ` / `. Pair the two languages in each optional body item as well.
 
    ```sh
    git diff --cached --check
    git diff --cached
-   git commit -m "<release summary and version>"
+   git commit -m "<中文摘要> / <English summary>"
    git status --short
    git show HEAD:package.json
    ```
 
-   Stop if the working tree still contains intended release changes or `HEAD:package.json` does
-   not contain the intended package version. Do not tag the old HEAD while the release files remain uncommitted. Resolve
-   the privacy decision before pushing; changing future Git identity does not scrub old commits.
-4. The maintainer can then tag and push that reviewed commit (only the intended tag):
+   Report the short commit ID and validation results. Ask whether to update `dshmarket` unless the maintainer already decided for this change. [Market update procedure](#updating-an-existing-dshmarket-installation)
 
-   ```sh
-   version=$(node -p "require('./package.json').version")
-   branch=$(git branch --show-current)
-   git tag "v$version"
-   git push origin "$branch" "v$version"
-   ```
+### Publish a GitHub Release
 
-5. Check GitHub's actual files and CI results. Create a GitHub Release for the tag with the matching
-   `CHANGELOG.md` section as the body. The workflow definition itself is not evidence of a green run.
+1. When the maintainer requests a formal release, select the verified commit and use the version already recorded in its `package.json` and changelog. Set the tag to `v` followed by that version.
+2. Check the local tag and the remote tag, including its peeled commit for an annotated tag. Reuse a tag that points to the approved commit. If it points elsewhere, report both commits to the maintainer. If it is absent, create an annotated tag on the approved commit and verify its target.
+3. With authorization to publish that tag, push its exact ref, for example `git push origin "refs/tags/$tag:refs/tags/$tag"` with `tag` set to the verified tag name. Keep a market update to `main` as a separate publication decision.
+4. Check the remote tag target and the CI result for that commit. Create or verify the same-named GitHub Release using the relevant changelog entries. Confirm the published release URL and any download assets.
 
 ## DeepSeek Harness plugin market
 
@@ -128,7 +116,7 @@ On 2026-10-21, the [full catalog](https://awesome-dsh-plugin.com/plugins.json) i
 
 ### Updating an existing dshmarket installation
 
-1. After each plugin change, ask the maintainer whether to publish the tested branch and version. An explicit release request for the current change supplies that approval.
+1. After each plugin change, ask the maintainer whether to publish the tested branch and version to `dshmarket`. An explicit market update request for the current change supplies that approval.
 2. Find this repository in the [public catalog](https://awesome-dsh-plugin.com/plugins.json) and read its `install` field. The current target, `github:liuli-zsl/dsh-unreal-engine-skills`, follows the repository's default branch. For a version update, push the approved release commit to `main`. The market checks the upstream package version for this GitHub source.
 3. Verify the commit advertised by the install target with `git ls-remote --symref origin HEAD` and read `package.json` at that exact public commit. Check that the previous GitHub-installed version is offered the update and that the new version is reported current. A local `link:` checkout uses the files on disk.
 
@@ -168,6 +156,4 @@ To publish:
 
 ## Prebuilt tarball (optional)
 
-A GitHub Release asset can be offered instead of a source install. Attach a `.tgz` and keep the
-asset name free of the version if you plan to use `releases/latest/download/...`, or pin the tag:
-`https://github.com/liuli-zsl/dsh-unreal-engine-skills/releases/download/v1.0.9/dsh-unreal-engine-skills.tgz`.
+To offer a `.tgz`, build it from the tagged commit and inspect its file list. When packaging a working directory, exclude `Docs/Plan/`. Upload the verified asset to the matching GitHub Release, then copy and test its actual download link. A tag-specific URL has the form `https://github.com/liuli-zsl/dsh-unreal-engine-skills/releases/download/<tag>/<asset-name>.tgz`.

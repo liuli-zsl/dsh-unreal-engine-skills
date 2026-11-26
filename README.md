@@ -2,48 +2,34 @@
 
 English | [中文](README.zh.md)
 
-Unofficial [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) port of Epic Games'
-[Unreal Engine Skills for Claude Code](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin)
-(MIT, upstream 3.1.2). One bundle gives an agent three things:
-
-- **Three runtime skills.** `unreal-mcp` (discover and call Editor toolsets), `create-toolset`
-  (author AI-callable C++/Python toolsets) and `unreal-skill` (author UE Agent Skills inside the
-  editor), registered from [`skills/`](skills/).
-- **The Unreal MCP connection.** A `unreal-mcp` row using `@deepseek-ai/dsh-mcp-client` connects to
-  the editor's `ModelContextProtocol` server (default `http://127.0.0.1:8000/mcp`). The port and URL
-  path are editable on the Harness Plugins page and take effect on save, without restarting.
-- **Unreal project context.** When a session's working directory is inside an Unreal project, a
-  short UE-specific context note is added to the system prompt (the directory is detected by
-  walking upward for a `.uproject` or `GenerateProjectFiles.*`).
-
-Current version: **1.1.1**. Use `main` for the latest development. To pin a local checkout to an engine line, run `git switch 5.8` or `git switch 5.9` before installing it. The `5.9` maintenance line starts from the UE 5.9 MegaJam Preview interface.
-
-See [Status and verification boundary](#status-and-verification-boundary)
-for what has and has not been verified.
+Connect DeepSeek Harness to Unreal Editor to read the open level and work with actors, assets and editor toolsets.
+Version **1.1.2** is an unofficial Harness port of Epic Games' Unreal Engine Skills for Claude Code 3.1.2 (MIT).
+[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) · [Epic's original plugin](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin)
 
 ## Install
 
-Requires DeepSeek Harness `>=0.2.0-rc.2 <0.3.0` (declared as `engines.dsh` in
-[`package.json`](package.json)).
+Use DeepSeek Harness `>=0.2.0-rc.2 <0.3.0` and an editor build that includes Unreal MCP and the toolsets you need. [Package manifest](package.json) · [Engine versions checked](#status-and-verification-boundary)
+
+### From the plugin market
+
+1. Open **Discover** in `dshmarket` and install `dsh-unreal-engine-skills` by `liuli-zsl`. The market installs from the public `main` branch. [Catalog entry](https://awesome-dsh-plugin.com/p/liuli-zsl/dsh-unreal-engine-skills/)
+2. Open the target Unreal project. Enable Unreal MCP and All Toolsets (or the individual toolsets you need) and restart the editor if prompted. If the MCP server is stopped, run `ModelContextProtocol.StartServer` in the editor console. [Editor setup](#editor-setup-once-per-project)
+3. In Harness, ask **“Use Unreal MCP to read the name of the current level.”** Compare the returned name with the level open in that editor. [Connection checks](#verify)
+
+Existing GitHub installs can check for updates in `dshmarket`. For installation or connection problems, contact the maintainer, `liuli-zsl`, through [GitHub Issues](https://github.com/liuli-zsl/dsh-unreal-engine-skills/issues).
 
 ### From GitHub
 
 ```sh
-dsh plugin --profile <your-profile> add github:liuli-zsl/dsh-unreal-engine-skills
+dsh plugin --profile web add github:liuli-zsl/dsh-unreal-engine-skills
 ```
 
-For `dsh web`, use the `web` profile. On the official Desktop app, prefer the app's **Plugins**
+The command above targets `dsh web`. On the official Desktop app, prefer the app's **Plugins**
 page and enter the GitHub source there. Command-line management of `desktop` requires the command
 installed by Desktop, an initialized profile, and fully quitting the app first; the npm CLI cannot
 manage that profile. See the [official CLI reference](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/README.md).
 The bundle patch adds two loader rows: `unreal-engine-skills` (this package) and `unreal-mcp`
 (`@deepseek-ai/dsh-mcp-client`).
-
-### From the plugin market
-
-Open **Discover** in `dshmarket` and search for `dsh-unreal-engine-skills` by `liuli-zsl`. The market installs `github:liuli-zsl/dsh-unreal-engine-skills` from the default branch. Existing GitHub installs can check for updates in the market. [Catalog entry](https://awesome-dsh-plugin.com/p/liuli-zsl/dsh-unreal-engine-skills/)
-
-The catalog's npm-version index for Harness 0.2.1+ **Plugins → Discover** is narrower than its full GitHub catalog: its generator requires an npm package, an exact version and its publish time. This plugin's catalog record has no npm package or version, and it is absent from that index as checked on 2026-10-21. It remains GitHub-only with `private: true`. This is a limit of that catalog's generator, not a requirement of every Discover index. See [`docs/publishing.md`](docs/publishing.md).
 
 ### From a local checkout (development)
 
@@ -55,9 +41,7 @@ skills, context injection or port form work.
 
 ## Editor setup (once per project)
 
-Your engine build must actually contain the `ModelContextProtocol` and `AllToolsets` plugins.
-This package does not install them, and does not claim support for every UE5 release. The exact
-engine version/branch and Windows/Linux behavior have not yet been recorded as verified.
+The engine supplies the `ModelContextProtocol` plugin and editor toolsets. The bundle connects Harness to that server.
 
 1. Check that Unreal MCP is enabled and enable All Toolsets (or the individual toolset plugins you need). Restart the editor if prompted.
 2. In Editor Preferences, check **Model Context Protocol → Auto Start Server**. Stock UE 5.8 defaults to off. The UE 5.9 Preview base configuration enables it. To start it for this session, run `ModelContextProtocol.StartServer [port]` in the editor console. The [setup guide](skills/unreal-mcp/references/setup.md) lists the `.ini` section for each version.
@@ -94,6 +78,12 @@ engine version/branch and Windows/Linux behavior have not yet been recorded as v
 
 With the editor running, ask the agent to read the current level. With tool search enabled it lists toolsets, reads the tool schema using the discovery tools advertised by the editor, and invokes the read-only tool through `call_tool`. UE 5.8 provides `describe_toolset`. UE 5.9 Preview provides `describe_toolsets` and `describe_tools`. Confirm the level belongs to the intended project.
 
+## What the bundle provides
+
+- **Three runtime skills.** `unreal-mcp` discovers and calls editor toolsets, `create-toolset` helps author AI-callable C++ or Python toolsets, and `unreal-skill` helps author UE Agent Skills in the editor. [Skill files](skills/)
+- **The Unreal MCP connection.** A `unreal-mcp` row uses `@deepseek-ai/dsh-mcp-client` to reach the editor at `http://127.0.0.1:8000/mcp` by default. The Harness Plugins page lets you set the port and URL path. [Port configuration](#port-configuration)
+- **Unreal project context.** The bundle walks up from the session's working directory to find a `.uproject` or `GenerateProjectFiles.*` file and adds a short UE-specific note to the system prompt.
+
 ## Security
 
 The bundle gives an agent broad live access to a running editor, including
@@ -105,7 +95,7 @@ full threat model.
 
 ## Status and verification boundary
 
-The discovery and configuration instructions were checked against UE 5.8.4 and UE 5.9 Preview source and base configuration. See Epic’s [5.8 MCP reference](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.8) and [5.9 MCP reference](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.9). For this version, an end-to-end Harness installation and read-only call against the editor still need verification. The [changelog](CHANGELOG.md) records automated checks and earlier live results.
+The discovery and configuration instructions were checked against UE 5.8.4 and UE 5.9 Preview source and base configuration. A clean-profile Harness installation and a read-only editor call are still pending for this version. [UE 5.8 MCP reference](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.8) · [UE 5.9 MCP reference](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.9) · [Verification history](Docs/CHANGELOG.md)
 
 ## Repository layout
 
@@ -117,7 +107,7 @@ The discovery and configuration instructions were checked against UE 5.8.4 and U
 | [`lib/client.js`](lib/client.js) | Browser half: a hand-written `__ModuleLoader__.load` bundle (no build step) rendering the port form on the bundle page and the "Configure" entry on the `unreal-mcp` row. |
 | [`skills/`](skills/) | The three skills' `SKILL.md` files and the `unreal-mcp` reference documents (`setup.md`, `operations.md`). |
 | `locale/` | Localization dictionaries. |
-| [`docs/publishing.md`](docs/publishing.md) | Release, npm and plugin-market submission steps. |
+| [`Docs/publishing.md`](Docs/publishing.md) | Release, npm and plugin-market submission steps. |
 | [`LICENSE`](LICENSE), [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) | License and upstream attribution. |
 
 ## Related projects
@@ -131,9 +121,9 @@ The discovery and configuration instructions were checked against UE 5.8.4 and U
 
 ## Development
 
-There is no build step. Repo conventions (version bump, documentation sync, verification scope) are
-in [AGENTS.md](AGENTS.md); changes are recorded in [CHANGELOG.md](CHANGELOG.md). Publishing and
-marketplace steps are in [`docs/publishing.md`](docs/publishing.md).
+Public installs use `main`. The maintainer's local checkout also has `5.8` and `5.9` maintenance branches. In a checkout that already contains those branches, use `git switch 5.8` or `git switch 5.9` before testing a change for that engine line. The `5.9` line starts with the UE 5.9 MegaJam Preview interface.
+
+The bundle ships as JavaScript. [Repository conventions](AGENTS.md) · [Changelog](Docs/CHANGELOG.md) · [Publishing guide](Docs/publishing.md)
 
 Run `pnpm install --frozen-lockfile --ignore-scripts`, then `pnpm test`. The tests use Node's built-in
 runner and do not compile code. The CI workflow runs the same checks on Node 22 and 24; its remote
