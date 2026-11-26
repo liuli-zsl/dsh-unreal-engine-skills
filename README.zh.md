@@ -3,7 +3,7 @@
 [English](README.md) | 中文
 
 用 DeepSeek Harness 连接 Unreal Editor，读取当前关卡，或通过编辑器工具集操作 Actor 和资产。
-插件当前版本为 **1.1.2**，由 Epic Games 的 Unreal Engine Skills for Claude Code 3.1.2（MIT）非官方移植而来。
+插件当前版本为 **1.2.0**。同一份 Harness 安装支持 UE 5.8 和 5.9，包含从 Epic 的 Claude Code 插件移植的技能，以及按目标版本查询引擎工作流的入口。
 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) · [Epic 上游插件](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin)
 
 ## 安装
@@ -41,7 +41,7 @@ dsh plugin --profile web add github:liuli-zsl/dsh-unreal-engine-skills
 引擎提供 `ModelContextProtocol` 插件及编辑器工具集，本插件负责让 Harness 连接该服务。
 
 1. 确认已启用 Unreal MCP，再启用 All Toolsets 或工程所需的独立工具集插件。编辑器提示重启时按提示操作。
-2. 在编辑器偏好设置的 **Model Context Protocol → Auto Start Server** 中检查自动启动状态。UE 5.8 默认为关，UE 5.9 Preview 的引擎基础配置默认开启。也可在编辑器控制台运行 `ModelContextProtocol.StartServer [port]` 启动当前会话。两个版本各自的 `.ini` 节名见[接入说明](skills/unreal-mcp/references/setup.md)。
+2. 在编辑器偏好设置的 **Model Context Protocol → Auto Start Server** 中检查自动启动状态。UE 5.8 默认为关，UE 5.9.0 的引擎基础配置默认开启。也可在编辑器控制台运行 `ModelContextProtocol.StartServer [port]` 启动当前会话。两个版本各自的 `.ini` 节名见[接入说明](skills/unreal-mcp/references/setup.md)。
 3. 默认端口为 `8000`。同时运行多个编辑器时，给每个工作区分配固定端口，再在 Harness 中选择相应端点。见[多编辑器配置](skills/unreal-mcp/references/setup.md#multiple-editors)。
 
 ## 端口配置
@@ -66,13 +66,21 @@ dsh plugin --profile web add github:liuli-zsl/dsh-unreal-engine-skills
 
 ## 验证
 
-编辑器运行后，让智能体读取当前关卡。启用工具搜索时，智能体先列出工具集，再用当前编辑器提供的接口读取参数，通过 `call_tool` 执行只读查询。UE 5.8 提供 `describe_toolset`，UE 5.9 Preview 提供 `describe_toolsets` 和 `describe_tools`。最后核对返回的关卡是否属于目标工程。
+编辑器运行后，让智能体读取当前关卡。启用工具搜索时，智能体先列出工具集，再用当前编辑器提供的接口读取参数，通过 `call_tool` 执行只读查询。UE 5.8 提供 `describe_toolset`，UE 5.9.0 提供 `describe_toolsets` 和 `describe_tools`。最后核对返回的关卡是否属于目标工程。
 
-## 插件功能
+## 查找当前工程的技能
 
-- **三个运行时技能。** `unreal-mcp` 发现并调用编辑器工具集，`create-toolset` 辅助编写可被 AI 调用的 C++ 或 Python 工具集，`unreal-skill` 辅助在编辑器中编写 UE Agent Skill。[技能目录](skills/)
-- **Unreal MCP 连接。** `unreal-mcp` 行通过 `@deepseek-ai/dsh-mcp-client` 连接编辑器，默认端点为 `http://127.0.0.1:8000/mcp`。可以在 Harness 插件页修改端口与 URL 路径。[端口配置](#端口配置)
-- **UE 工程上下文。** 插件从会话工作目录向上查找 `.uproject` 或 `GenerateProjectFiles.*`，识别到 Unreal 工程时向系统提示词加入 UE 上下文提示。
+可以对 Harness 说 **“帮我找这个工程的蓝图编辑工作流。”** 插件向 Harness 注册四个技能。前三个来自 Epic 的 Claude Code 插件，第四个 `unreal-engine-workflows` 根据目标工程和引擎版本查找指引。[查询入口](skills/unreal-engine-workflows/SKILL.md)
+
+| 来源 | 适用版本 | 可用内容 |
+| --- | --- | --- |
+| Epic 官方 GitHub 的 Claude Code 插件 3.1.2（MIT），已适配 Harness | 5.8、5.9 | `unreal-mcp` 操作编辑器，`create-toolset` 辅助开发 C++ 或 Python 工具，`unreal-skill` 辅助编写编辑器 Agent Skill。[Epic 官方仓库](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin) |
+| UE 引擎安装自带的工作流 | 两代共用 **21 项**，5.9 新增 **57 项**，合计 **78 项** | 共用项包括布料、Dataflow、蓝图及编辑器、Niagara 和 PCG。5.9 新增项包括构建与日志、Sequencer、UI、MetaSound、渲染、PCG Markdown 和 Wasm 等。两张随包清单逐项列出 ID、提供模块、相对 `Engine/` 的源码路径和原创桌面指引。[21 项共用清单](skills/unreal-engine-workflows/references/shared.csv) · [57 项新增清单](skills/unreal-engine-workflows/references/ue5.9.csv) |
+| Unreal Canvas 与 Unreal Assistant | 5.9 | Canvas 0.24.0 提供扩展编写技能 `unrealcanvas-extension-author`。画布技能库使用 `list_skills`、`get_skill` 和 `resolve_skills`。编辑器操作走 `unreal-mcp`，Unreal Assistant 使用当前编辑器注册表。这些入口与 78 项引擎工作流分别统计。[Canvas 与 Assistant 指引](skills/unreal-engine-workflows/references/canvas-assistant.md) |
+
+**离线使用。** 告诉 Harness 目标 `.uproject`、引擎安装目录或明确的版本。查询入口会核对工程的数字版本关联、安装中的 `Engine/Build/Build.version` 和你指定的版本。版本未知或互相冲突时会停止。只给版本即可读随包指引，提供匹配安装后还可读取其中的 Python、Markdown 和 C++ 文本。Epic 引擎正文和资产保留在用户安装中。
+
+**连接编辑器。** 在 Harness 插件页选中目标编辑器的端点。Harness 先核对响应的工程与引擎，再发现当前注册表的工具，通过 `ListSkills` 列出真实键，用返回的键调用 `GetSkills` 读取完整正文，包括蓝图和工程自定义技能。可用条目取决于工程启用的模块。切换编辑器或重新连接后，重新核对身份、工具参数和技能键。[连接与编辑器识别](skills/unreal-mcp/references/operations.md#identify-the-editor)
 
 ## 安全
 
@@ -84,7 +92,7 @@ dsh plugin --profile web add github:liuli-zsl/dsh-unreal-engine-skills
 
 ## 平台与验证边界
 
-已按 UE 5.8.4 与 UE 5.9 Preview 的源码和基础配置核对工具发现与启动说明。本版仍待全新 Harness profile 安装和编辑器端只读调用实测。[UE 5.8 MCP 文档](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.8) · [UE 5.9 MCP 文档](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.9) · [验证记录](Docs/CHANGELOG.md)
+Harness 运行时的技能工具已加载本包查询入口。DSH MCP 客户端分别在 UE 5.8.4（CL 58902052，临时空工程的编辑器命令行实例，4 个注册键）和 UE 5.9.0（CL 60738873，运行中的编辑器工程，87 个注册键）完成只读 `ListSkills` 和 `GetSkills`。两边都取得蓝图编辑完整正文，5.9 还取得日志排查和 PCG 图生成资产的正文。已逐项核对两套安装中的 21 和 78 条来源路径。全新 Harness profile 安装和桌面插件页点击流程仍待单独验收。[验证记录](Docs/CHANGELOG.md)
 
 ## 仓库结构
 
@@ -94,7 +102,7 @@ dsh plugin --profile web add github:liuli-zsl/dsh-unreal-engine-skills
 | [`cordis.patch.yml`](cordis.patch.yml) | bundle 补丁层：插入 `unreal-engine-skills` 行与 `unreal-mcp` 行（`url` 默认取 `UNREAL_MCP_URL`，`!!js` 表达式）。 |
 | [`lib/index.js`](lib/index.js) | host 半：注册 `skills/` 下的技能、UE 工程检测与系统提示词上下文注入、volatile `Config`（`port` / `path`）、url 同步。 |
 | [`lib/client.js`](lib/client.js) | 浏览器半：手写的 `__ModuleLoader__.load` bundle（无构建步骤），渲染 bundle 页端口表单与 `unreal-mcp` 行的“配置”入口。 |
-| [`skills/`](skills/) | 三个技能的 `SKILL.md` 与 `unreal-mcp` 的参考文档（`setup.md`、`operations.md`）。 |
+| [`skills/`](skills/) | 四个 Harness 技能入口、MCP 连接说明、分版本工作流清单与离线读取器。 |
 | `locale/` | 插件本地化字典。 |
 | [`Docs/publishing.md`](Docs/publishing.md) | 发布、npm 与插件市场上架步骤。 |
 | [`LICENSE`](LICENSE)、[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) | 许可证与上游署名。 |
@@ -109,7 +117,7 @@ dsh plugin --profile web add github:liuli-zsl/dsh-unreal-engine-skills
 
 ## 开发
 
-公开安装使用 `main`。维护者的本地工作副本另有 `5.8` 与 `5.9` 分支。工作副本已包含这些分支时，可用 `git switch 5.8` 或 `git switch 5.9` 切换到对应引擎系列后验证改动。`5.9` 维护线从 UE 5.9 MegaJam Preview 的接口起步。
+公开安装使用 `main`，同一份插件支持两代引擎。维护者本地的 `5.8` 与 `5.9` 分支用于对应系列的专项改动。
 
 本插件直接以 JavaScript 分发。[仓库协作约定](AGENTS.md) · [变更记录](Docs/CHANGELOG.md) · [发布说明](Docs/publishing.md)
 

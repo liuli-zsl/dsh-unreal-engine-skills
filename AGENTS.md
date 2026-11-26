@@ -10,10 +10,11 @@
 2. 端口配置链路从 `unreal-engine-skills` 行的 volatile `Config`（`port` / `path`）查起：插件页表单 → Harness 设置传输（`settings.mutate`）→ `configEditor.edit` → host 半 `syncMcpUrl` → `unreal-mcp` 行 `url` → MCP 客户端重连。排查时区分「行配置解析值」「profile 补丁原文」与「运行中 fiber 的配置」三层。
 3. 浏览器侧从 `dsh.client` 声明查起：`clientModules` 在进程内按 `(baseUrl, 包名)` 永久缓存包元数据（含「不是客户端包」的否定结论），包清单变化后必须触发一次 `modules` 行重新应用（见下）或重启 Harness；客户端 bundle 由 `/plugins` combo 路由按文件元数据哈希的修订号服务。
 4. 涉及 DSH 内部机制（settings、configEditor、HMR、clientModules、槽位系统）时，以 asar 内对应包的源码为准，不要凭名称推断行为。
+5. 版本化工作流从 `skills/unreal-engine-workflows/SKILL.md` 进入。维护 `references/shared.csv` 和 `references/ue5.9.csv` 时，逐项核对目标安装的来源路径，只收录原创桌面指引。用 `scripts/workflows.mjs` 验证版本筛选与冲突，再通过 Harness 的 `unreal-mcp` 在各目标编辑器实测 `ListSkills` 和 `GetSkills`。Canvas 和 Assistant 的接入说明单列。
 
 ## 分支约定
 
-`main` 跟进最新适配，也是公开安装来源。`5.8` 与 `5.9` 是维护者的本地分支，各自维护对应 UE 系列。更新引擎接入说明时，按目标分支核对工具 schema 和引擎配置，并记录实际验证的版本。通用修复按各分支的适用性移植。
+`main` 跟进最新适配，也是公开安装来源，同一份包按目标工程支持 UE 5.8 和 5.9。`5.8` 与 `5.9` 是维护者的本地分支，各自维护对应 UE 系列。更新引擎接入说明时，按目标引擎核对工具 schema 和引擎配置，并记录实际验证的版本。通用修复按各分支的适用性移植。
 
 ## README 写作约定
 

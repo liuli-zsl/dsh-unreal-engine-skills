@@ -8,15 +8,19 @@
 
 Adapted material:
 
-- the skill content under `skills/` (`unreal-mcp`, `create-toolset`, `unreal-skill`, including
+- the three client skills (`unreal-mcp`, `create-toolset`, `unreal-skill`, including
   the `unreal-mcp` reference documents);
 - the logic of the upstream `SessionStart` hook, reimplemented as a Harness system-prompt
   context provider in `lib/index.js`;
 - the upstream MCP endpoint setup, reimplemented as an `@deepseek-ai/dsh-mcp-client` loader row
   in `cordis.patch.yml` instead of a generated `.mcp.json`.
 
-Everything else — the Harness bundle packaging, the Plugins-page port form, the browser bundle
-and the port-to-MCP-row synchronization — is original to this project.
+The Harness packaging, Plugins-page form, browser bundle and endpoint synchronization are original to this project.
+The two catalogues in `skills/unreal-engine-workflows/references/` reproduce liuli-zsl's original desktop
+guidance and source paths from the companion `codex-unreal-engine-skills` project at commit `fb0dbbe`.
+Users read Epic's engine text from their installation, Blueprint skill instructions from the editor registry
+and Canvas resources from the Canvas service. Epic's engine content is subject to the
+[Unreal Engine terms](https://www.unrealengine.com/eula/unreal).
 
 The upstream project is distributed under the MIT License:
 

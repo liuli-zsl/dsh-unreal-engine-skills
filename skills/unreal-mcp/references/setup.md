@@ -14,7 +14,7 @@ Check the effective settings first. Confirm the target project before changing i
 First confirm that this engine build contains both plugins; this Harness package does not install
 engine plugins or make an older engine support these APIs.
 
-UE 5.8 ships `ModelContextProtocol` disabled by default. UE 5.9 Preview ships it enabled. Check the project's effective plugin settings. Enable `AllToolsets` for the full tool catalog or enable the individual toolset plugins you need. For the full catalog, merge these entries into the project's existing `Plugins` array and preserve other entries:
+UE 5.8 ships `ModelContextProtocol` disabled by default. UE 5.9.0 ships it enabled. Check the project's effective plugin settings. Enable `AllToolsets` for the full tool catalog or enable the individual toolset plugins you need. For the full catalog, merge these entries into the project's existing `Plugins` array and preserve other entries:
 
 ```json
 {
@@ -29,14 +29,14 @@ Restart the editor if prompted after changing its plugins.
 
 ## 2. Enable auto-start
 
-In Editor Preferences, open **Model Context Protocol** and check **Auto Start Server**. UE 5.8 defaults to off. UE 5.9 Preview enables it in the engine's base editor configuration. The project or user can override that value. To start the server for one session, run `ModelContextProtocol.StartServer [port]` in the editor console.
+In Editor Preferences, open **Model Context Protocol** and check **Auto Start Server**. UE 5.8 defaults to off. UE 5.9.0 enables it in the engine's base editor configuration. The project or user can override that value. To start the server for one session, run `ModelContextProtocol.StartServer [port]` in the editor console.
 
 For a persistent override, use `<Project>/Saved/Config/<Platform>Editor/EditorPerProjectUserSettings.ini`. Choose the section for your engine:
 
 | Engine | Section |
 | --- | --- |
 | UE 5.8 | `[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]` |
-| UE 5.9 Preview | `[/Script/ModelContextProtocol.ModelContextProtocolSettings]` |
+| UE 5.9.0 | `[/Script/ModelContextProtocol.ModelContextProtocolSettings]` |
 
 Under that section, set `bAutoStartServer=True` to enable startup. The default endpoint uses `ServerPortNumber=8000` and `ServerUrlPath=/mcp`. Override the port or path there when needed.
 

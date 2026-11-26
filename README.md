@@ -3,7 +3,7 @@
 English | [中文](README.zh.md)
 
 Connect DeepSeek Harness to Unreal Editor to read the open level and work with actors, assets and editor toolsets.
-Version **1.1.2** is an unofficial Harness port of Epic Games' Unreal Engine Skills for Claude Code 3.1.2 (MIT).
+Version **1.2.0** uses one Harness installation for UE 5.8 and 5.9. It includes an unofficial port of Epic's Claude Code skills and a version-aware lookup for engine workflows.
 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) · [Epic's original plugin](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin)
 
 ## Install
@@ -44,7 +44,7 @@ skills, context injection or port form work.
 The engine supplies the `ModelContextProtocol` plugin and editor toolsets. The bundle connects Harness to that server.
 
 1. Check that Unreal MCP is enabled and enable All Toolsets (or the individual toolset plugins you need). Restart the editor if prompted.
-2. In Editor Preferences, check **Model Context Protocol → Auto Start Server**. Stock UE 5.8 defaults to off. The UE 5.9 Preview base configuration enables it. To start it for this session, run `ModelContextProtocol.StartServer [port]` in the editor console. The [setup guide](skills/unreal-mcp/references/setup.md) lists the `.ini` section for each version.
+2. In Editor Preferences, check **Model Context Protocol → Auto Start Server**. Stock UE 5.8 defaults to off. The UE 5.9.0 base configuration enables it. To start it for this session, run `ModelContextProtocol.StartServer [port]` in the editor console. The [setup guide](skills/unreal-mcp/references/setup.md) lists the `.ini` section for each version.
 3. The default port is `8000`. When running multiple editors, assign a fixed port to each workspace and select the matching endpoint in Harness. See [setup](skills/unreal-mcp/references/setup.md#multiple-editors).
 
 ## Port configuration
@@ -76,13 +76,21 @@ The engine supplies the `ModelContextProtocol` plugin and editor toolsets. The b
 
 ## Verify
 
-With the editor running, ask the agent to read the current level. With tool search enabled it lists toolsets, reads the tool schema using the discovery tools advertised by the editor, and invokes the read-only tool through `call_tool`. UE 5.8 provides `describe_toolset`. UE 5.9 Preview provides `describe_toolsets` and `describe_tools`. Confirm the level belongs to the intended project.
+With the editor running, ask the agent to read the current level. With tool search enabled it lists toolsets, reads the tool schema using the discovery tools advertised by the editor, and invokes the read-only tool through `call_tool`. UE 5.8 provides `describe_toolset`. UE 5.9.0 provides `describe_toolsets` and `describe_tools`. Confirm the level belongs to the intended project.
 
-## What the bundle provides
+## Find skills for your project
 
-- **Three runtime skills.** `unreal-mcp` discovers and calls editor toolsets, `create-toolset` helps author AI-callable C++ or Python toolsets, and `unreal-skill` helps author UE Agent Skills in the editor. [Skill files](skills/)
-- **The Unreal MCP connection.** A `unreal-mcp` row uses `@deepseek-ai/dsh-mcp-client` to reach the editor at `http://127.0.0.1:8000/mcp` by default. The Harness Plugins page lets you set the port and URL path. [Port configuration](#port-configuration)
-- **Unreal project context.** The bundle walks up from the session's working directory to find a `.uproject` or `GenerateProjectFiles.*` file and adds a short UE-specific note to the system prompt.
+Ask Harness **“Find the Blueprint editing workflow for this project.”** Harness registers four skills. Three come from Epic's Claude Code plugin. The fourth, `unreal-engine-workflows`, selects engine guidance for your target. [Lookup instructions](skills/unreal-engine-workflows/SKILL.md)
+
+| Source | UE version | What you can use |
+| --- | --- | --- |
+| Epic's official Claude Code plugin 3.1.2 (MIT), adapted for Harness | 5.8 and 5.9 | `unreal-mcp` operates the editor, `create-toolset` helps develop C++ or Python tools, and `unreal-skill` helps author editor Agent Skills. [Epic repository](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin) |
+| Workflows in the UE engine installation | 5.8 and 5.9 share **21**. 5.9 adds **57**, for **78** total. | The shared set covers cloth, Dataflow, Blueprint/editor tasks, Niagara and PCG. Additions include build and log analysis, Sequencer, UI, MetaSound, rendering, PCG Markdown and Wasm. Both shipped catalogues list every ID, provider module, path relative to `Engine/` and original desktop guidance. [21 shared entries](skills/unreal-engine-workflows/references/shared.csv) · [57 additions](skills/unreal-engine-workflows/references/ue5.9.csv) |
+| Unreal Canvas and Unreal Assistant | 5.9 | Canvas 0.24.0 supplies `unrealcanvas-extension-author`. Query the canvas library with `list_skills`, `get_skill` and `resolve_skills`. Editor operations use `unreal-mcp`. Unreal Assistant uses that editor's registry. These integrations are counted separately from the 78 workflows. [Canvas and Assistant](skills/unreal-engine-workflows/references/canvas-assistant.md) |
+
+**Offline.** Give Harness the target `.uproject`, engine installation or explicit version. The lookup checks a numeric project association and the installation's `Engine/Build/Build.version` against any version you supply. Unknown versions and conflicting evidence stop selection. With just a version you can read the packaged guidance. With a matching installation you can also read the referenced Python, Markdown and C++ text. Epic's engine text and assets stay in that installation.
+
+**Online.** Select the editor's endpoint on the Harness Plugins page. Harness identifies the responding project and engine, discovers the advertised registry tools, calls `ListSkills` and passes a returned key to `GetSkills` for full instructions, including Blueprint and project-defined skills. Available entries depend on the project's enabled modules. Switching editors or reconnecting requires fresh identification, schemas and keys. [Connection and identity](skills/unreal-mcp/references/operations.md#identify-the-editor)
 
 ## Security
 
@@ -95,7 +103,7 @@ full threat model.
 
 ## Status and verification boundary
 
-The discovery and configuration instructions were checked against UE 5.8.4 and UE 5.9 Preview source and base configuration. A clean-profile Harness installation and a read-only editor call are still pending for this version. [UE 5.8 MCP reference](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.8) · [UE 5.9 MCP reference](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor?application_version=5.9) · [Verification history](Docs/CHANGELOG.md)
+The Harness runtime skill tool loaded the packaged lookup. The DSH MCP client then called `ListSkills` and `GetSkills` against UE 5.8.4 (CL 58902052, a minimal editor commandlet project, 4 registered keys) and UE 5.9.0 (CL 60738873, a running editor project, 87 keys). Both returned complete Blueprint guidance. The 5.9 editor also returned the log-triage and PCG graph-generation instructions. All 21 and 78 source paths were checked in their respective installations. Clean-profile installation and the desktop Plugins-page click-through remain unverified for this version. [Verification record](Docs/CHANGELOG.md)
 
 ## Repository layout
 
@@ -105,7 +113,7 @@ The discovery and configuration instructions were checked against UE 5.8.4 and U
 | [`cordis.patch.yml`](cordis.patch.yml) | Bundle patch layer: inserts the `unreal-engine-skills` row and the `unreal-mcp` row (whose `url` defaults to `UNREAL_MCP_URL` via a `!!js` expression). |
 | [`lib/index.js`](lib/index.js) | Host half: skill registration from `skills/`, Unreal project detection and system-prompt context injection, the volatile `Config` (`port`, `path`) and the url sync. |
 | [`lib/client.js`](lib/client.js) | Browser half: a hand-written `__ModuleLoader__.load` bundle (no build step) rendering the port form on the bundle page and the "Configure" entry on the `unreal-mcp` row. |
-| [`skills/`](skills/) | The three skills' `SKILL.md` files and the `unreal-mcp` reference documents (`setup.md`, `operations.md`). |
+| [`skills/`](skills/) | Four Harness skill entries, MCP connection guides, versioned workflow catalogues and the offline reader. |
 | `locale/` | Localization dictionaries. |
 | [`Docs/publishing.md`](Docs/publishing.md) | Release, npm and plugin-market submission steps. |
 | [`LICENSE`](LICENSE), [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) | License and upstream attribution. |
@@ -121,7 +129,7 @@ The discovery and configuration instructions were checked against UE 5.8.4 and U
 
 ## Development
 
-Public installs use `main`. The maintainer's local checkout also has `5.8` and `5.9` maintenance branches. In a checkout that already contains those branches, use `git switch 5.8` or `git switch 5.9` before testing a change for that engine line. The `5.9` line starts with the UE 5.9 MegaJam Preview interface.
+Public installs use `main`, which supports both engine series in one package. The maintainer's local `5.8` and `5.9` branches are available for changes specific to those lines.
 
 The bundle ships as JavaScript. [Repository conventions](AGENTS.md) · [Changelog](Docs/CHANGELOG.md) · [Publishing guide](Docs/publishing.md)
 

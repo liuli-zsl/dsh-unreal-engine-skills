@@ -17,7 +17,7 @@ Run these from the Unreal Editor console (`~`).
 
 The MCP server's tool list has two modes, controlled by the `bEnableToolSearch` UPROPERTY on `UModelContextProtocolSettings` (default `true`):
 
-- **Enabled (default).** Use `list_toolsets`, then the discovery tool advertised by the server. UE 5.8 exposes `describe_toolset`. UE 5.9 Preview exposes `describe_toolsets` and `describe_tools`. Both use `call_tool` for dispatch.
+- **Enabled (default).** Use `list_toolsets`, then the discovery tool advertised by the server. UE 5.8 exposes `describe_toolset`. UE 5.9.0 exposes `describe_toolsets` and `describe_tools`. Both use `call_tool` for dispatch.
 - **Disabled.** Call each domain tool by its advertised Harness name and schema.
 
 To change the mode, set `bEnableToolSearch` in the same per-user section as `bAutoStartServer` for the target engine (see [setup](setup.md#2-enable-auto-start)). Reconnect and inspect the advertised tools.

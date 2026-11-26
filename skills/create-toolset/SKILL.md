@@ -80,7 +80,7 @@ Keep what can't be inferred: units, ranges, non-obvious encodings (e.g. "a singl
 
 **Structs**: Document the struct itself (what it represents and when it's used) and every field (meaning and units where applicable). UPROPERTY metadata such as `ClampMin` and `ClampMax` is extracted automatically and included in the schema. Use it rather than restating constraints in the doc comment.
 
-On UE 5.9 Preview, declare the access mode appropriate for each tool. For example, a read-only query uses `AIAccessMode = "Read"` alongside `AICallable` in C++, or `@toolset_registry.tool_call(mode=unreal.ToolAccessMode.READ)` in Python. Check the target engine before using access-mode metadata on older releases.
+On UE 5.9.0, declare the access mode appropriate for each tool. For example, a read-only query uses `AIAccessMode = "Read"` alongside `AICallable` in C++, or `@toolset_registry.tool_call(mode=unreal.ToolAccessMode.READ)` in Python. Check the target engine before using access-mode metadata on older releases.
 
 ## C++ Specifics
 
@@ -233,7 +233,7 @@ TArray<UMyThing*> UMyToolset::FindThings(const FString& NamePattern)
 
 ### Tests
 
-Before running tests, compile your changes with `LiveCodingToolset.CompileLiveCoding`. It blocks until done and surfaces MSVC diagnostics. Fix any compile errors before proceeding.
+When the user has authorized a build, compile the C++ changes before running their tests. For an authorized Live Coding build, `LiveCodingToolset.CompileLiveCoding` waits for completion and returns MSVC diagnostics. Report static checks separately if the user is handling compilation.
 
 Every tool needs test coverage for both the success path and every error path. Write at least one test that confirms the tool does what it says, and a separate test for each condition that raises. Use the `BEGIN_DEFINE_SPEC` / `END_DEFINE_SPEC` pattern. Read existing tests in `Plugins/Experimental/Toolsets` for reference. Place tests near the toolset and follow the convention in the same plugin:
 

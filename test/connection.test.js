@@ -126,7 +126,7 @@ test('all form-built endpoints stay on HTTP loopback with no URL credentials', a
 test('missing configEditor or HMR does not prevent skill registration', async () => {
   for (const options of [{ noEditor: true }, { noHmr: true, raw: { port: 9999 } }]) {
     const result = await runPlugin(options)
-    assert.deepEqual(result.skills.map((skill) => skill.name).sort(), ['create-toolset', 'unreal-mcp', 'unreal-skill'])
+    assert.deepEqual(result.skills.map((skill) => skill.name).sort(), ['create-toolset', 'unreal-engine-workflows', 'unreal-mcp', 'unreal-skill'])
     assert.equal(result.warnings.length, 0)
   }
 })
@@ -150,6 +150,14 @@ test('project context uses the real skill files and detects parent project roots
   }
   const note = (cwd) => result.contexts[0].text({ agent: { session: { header: { cwd } } } })
   assert.match(note(join(project, 'Source')), /Example\.uproject/)
+  const descriptor = join(project, 'Example.uproject')
+  for (const series of ['5.8', '5.9']) {
+    writeFileSync(descriptor, JSON.stringify({ EngineAssociation: series }))
+    assert.ok(note(join(project, 'Source')).includes(`Workspace engine series: UE ${series}.`))
+  }
+  writeFileSync(join(project, 'Second.uproject'), '{"EngineAssociation":"5.8"}')
+  assert.match(note(project), /Multiple .uproject/)
+  assert.doesNotMatch(note(project), /Workspace engine series/)
   assert.equal(note(root), '')
   assert.equal(note(undefined), '')
 })

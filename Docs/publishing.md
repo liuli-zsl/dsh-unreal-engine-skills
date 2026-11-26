@@ -81,14 +81,13 @@ On 2026-10-21, the [full catalog](https://awesome-dsh-plugin.com/plugins.json) i
    name: liuli-zsl/dsh-unreal-engine-skills
    category: skill
    description:
-     en: Registers Epic's Unreal Engine skills (unreal-mcp, create-toolset, unreal-skill), injects Unreal project context, and connects the editor's ModelContextProtocol server with a port form on the Plugins page.
-     zh: 注册 Epic 的 Unreal Engine 三个技能（unreal-mcp、create-toolset、unreal-skill），注入 UE 工程上下文，接通编辑器的 ModelContextProtocol 服务器，并支持在插件页修改端口。
+     en: Connects Harness to Unreal Editor and finds workflows for UE 5.8 and 5.9, with three Epic client skills, offline guidance and live project skills.
+     zh: 连接 Harness 与 Unreal Editor，按 UE 5.8 或 5.9 查找引擎工作流，提供三个 Epic 客户端技能、离线指引和当前工程的在线技能。
    ```
 
    `description.en` is required and must be one line ending with a period. The Chinese line is
-   optional. Keep the description accurate: the three skills are shipped here; the MCP tools
-   themselves are provided by the editor's `ModelContextProtocol` and `AllToolsets` plugins, not by
-   this package.
+   optional. The package ships three Epic client skills and the version-aware workflow lookup.
+   The editor's `ModelContextProtocol` plugin and enabled toolsets provide the live tools.
 
 3. Do **not** edit the generated `README.md` / `README.zh.md` in the list repository. They are
    regenerated from `data/plugins/*.yml` after merge.
@@ -97,8 +96,8 @@ On 2026-10-21, the [full catalog](https://awesome-dsh-plugin.com/plugins.json) i
 
    ```text
    Add liuli-zsl/dsh-unreal-engine-skills — a DeepSeek Harness port of Epic's Unreal Engine
-   Skills for Claude Code (MIT). One bundle registers the three skills (unreal-mcp,
-   create-toolset, unreal-skill), injects Unreal project context, and wires the editor's
+   Skills for Claude Code (MIT). One bundle registers three client skills and a workflow
+   lookup for UE 5.8 and 5.9, injects Unreal project context, and wires the editor's
    ModelContextProtocol server, with the endpoint editable on the Plugins page and hot-reloaded
    on save.
 

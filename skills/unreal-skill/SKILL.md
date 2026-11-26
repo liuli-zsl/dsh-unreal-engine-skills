@@ -5,6 +5,8 @@ description: "Use this skill when creating, editing, or reviewing an Unreal Engi
 
 # Unreal Skill
 
+To find or use a built-in workflow for an existing UE 5.8 or 5.9 project, load the Harness `unreal-engine-workflows` skill. For authoring, verify the target project's registered skills and the create/update schemas on its own editor connection.
+
 You are authoring an Unreal Engine Agent Skill: a named, reusable bundle of instructions that packages essential knowledge the agent either doesn't know or needs to pay close attention to. A skill can provide general best practices in a domain, guidance on a specific workflow, or a mix of both.
 
 ## Principles
@@ -31,7 +33,7 @@ Work through these questions before writing anything.
 
 **2. Choose the implementation path.** Choose a format supported by the target engine and the project:
 
-- **Markdown (UE 5.9 Preview)**: For a source-controlled workflow, place `SKILL.md` under `<Project>/Skills/<folder>/` or `<EnabledPlugin>/Skills/<folder>/`. Include `name` and `description` in YAML frontmatter and put the instructions in the body. Look up the registered path with `ListSkills` and read it with `GetSkills`.
+- **Markdown (UE 5.9.0)**: For a source-controlled workflow, place `SKILL.md` under `<Project>/Skills/<folder>/` or `<EnabledPlugin>/Skills/<folder>/`. Include `name` and `description` in YAML frontmatter and put the instructions in the body. Look up the registered path with `ListSkills` and read it with `GetSkills`.
 - **Python class**: The right choice when the skill is part of a code plugin. It lives alongside the plugin's Python toolsets, is version-controlled with the plugin, and is registered automatically when the plugin loads.
 - **UAsset**: The right choice when the skill is project-specific and doesn't belong in a plugin. Create it directly in the Content Browser using `CreateSkill` via MCP. No code required.
 
